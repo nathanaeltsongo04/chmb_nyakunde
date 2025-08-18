@@ -5,15 +5,19 @@ require_once __DIR__ . '/../../controller/PatientController.php';
 $title = "Patients";
 $pageTitle = "Patients";
 
-$controller = new PatientController();
+// Connexion à la base
+$db = (new Database())->getConnection();
+$controller = new PatientController($db);
 
 // Ajout ou modification
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['_method']) && $_POST['_method'] === 'PUT') {
+        // Modification
         $controller->update($_POST['IdPatient'], $_POST);
         header("Location: index.php?msg=modif");
         exit;
     } elseif (isset($_POST['ajouter'])) {
+        // Ajout
         $controller->store($_POST);
         header("Location: index.php?msg=ajout");
         exit;
@@ -33,67 +37,73 @@ ob_start();
 
 <div class="col-lg-12">
     <div class="row">
+        <!-- Liste des patients -->
         <div class="col-12">
             <div class="card recent-sales overflow-auto">
+
                 <div class="filter">
                     <a class="icon" data-bs-toggle="modal" data-bs-target="#patientModal" onclick="openPatientModal(null)">
                         <i class="bi bi-plus-circle-fill h4"></i>
                     </a>
                 </div>
+
                 <div class="card-body">
                     <h5 class="card-title"><?= $pageTitle ?></h5>
 
-                    <?php if (isset($_GET['msg'])): ?>
-                        <div class="alert alert-<?= $_GET['msg'] === 'ajout' ? 'success' : ($_GET['msg'] === 'modif' ? 'info' : 'danger') ?>">
-                            Patient <?= $_GET['msg'] === 'ajout' ? 'ajouté' : ($_GET['msg'] === 'modif' ? 'modifié' : 'supprimé') ?> avec succès ✅
-                        </div>
+                    <?php if (isset($_GET['msg']) && $_GET['msg'] === 'ajout'): ?>
+                        <div class="alert alert-success">Patient ajouté avec succès ✅</div>
+                    <?php elseif (isset($_GET['msg']) && $_GET['msg'] === 'modif'): ?>
+                        <div class="alert alert-info">Patient modifié avec succès ✏️</div>
+                    <?php elseif (isset($_GET['msg']) && $_GET['msg'] === 'suppr'): ?>
+                        <div class="alert alert-danger">Patient supprimé avec succès 🗑️</div>
                     <?php endif; ?>
 
                     <div class="table-responsive text-nowrap">
                         <table class="table datatable text-center">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Nom</th>
-                                <th>Post-nom</th>
-                                <th>Prénom</th>
-                                <th>Date de naissance</th>
-                                <th>Sexe</th>
-                                <th>Adresse</th>
-                                <th>Téléphone</th>
-                                <th>Email</th>
-                                <th>Num Assurance</th>
-                                <th>Groupe Sanguin</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($patients as $pat): ?>
+                            <thead>
                                 <tr>
-                                    <td><?= $pat['IdPatient'] ?></td>
-                                    <td><?= htmlspecialchars($pat['Nom']) ?></td>
-                                    <td><?= htmlspecialchars($pat['PostNom']) ?></td>
-                                    <td><?= htmlspecialchars($pat['Prenom']) ?></td>
-                                    <td><?= htmlspecialchars($pat['DateNaissance']) ?></td>
-                                    <td><?= htmlspecialchars($pat['Sexe']) ?></td>
-                                    <td><?= htmlspecialchars($pat['Adresse']) ?></td>
-                                    <td><?= htmlspecialchars($pat['Telephone']) ?></td>
-                                    <td><?= htmlspecialchars($pat['Email']) ?></td>
-                                    <td><?= htmlspecialchars($pat['NumAssurance']) ?></td>
-                                    <td><?= htmlspecialchars($pat['GroupeSanguin']) ?></td>
-                                    <td>
-                                        <a class="text-info mx-1" href="#" onclick='openPatientModal(<?= json_encode($pat) ?>)'>
-                                            <span class="badge bg-success"><i class="bi bi-pencil-square fa-lg"></i></span>
-                                        </a>
-                                        <a class="text-danger mx-1" href="index.php?delete=<?= $pat['IdPatient'] ?>" onclick="return confirm('Voulez-vous vraiment supprimer ce patient ?')">
-                                            <span class="badge bg-danger"><i class="bi bi-trash fa-lg"></i></span>
-                                        </a>
-                                    </td>
+                                    <th>#</th>
+                                    <th>Nom</th>
+                                    <th>Post-nom</th>
+                                    <th>Prénom</th>
+                                    <th>Date de naissance</th>
+                                    <th>Sexe</th>
+                                    <th>Adresse</th>
+                                    <th>Téléphone</th>
+                                    <th>Email</th>
+                                    <th>Num Assurance</th>
+                                    <th>Groupe Sanguin</th>
+                                    <th>Action</th>
                                 </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($patients as $pat): ?>
+                                    <tr>
+                                        <td><?= $pat['IdPatient'] ?></td>
+                                        <td><?= htmlspecialchars($pat['Nom']) ?></td>
+                                        <td><?= htmlspecialchars($pat['PostNom']) ?></td>
+                                        <td><?= htmlspecialchars($pat['Prenom']) ?></td>
+                                        <td><?= htmlspecialchars($pat['DateNaissance']) ?></td>
+                                        <td><?= htmlspecialchars($pat['Sexe']) ?></td>
+                                        <td><?= htmlspecialchars($pat['Adresse']) ?></td>
+                                        <td><?= htmlspecialchars($pat['Telephone']) ?></td>
+                                        <td><?= htmlspecialchars($pat['Email']) ?></td>
+                                        <td><?= htmlspecialchars($pat['NumAssurance']) ?></td>
+                                        <td><?= htmlspecialchars($pat['GroupeSanguin']) ?></td>
+                                        <td>
+                                            <a class="text-info mx-1" href="#" onclick='openPatientModal(<?= json_encode($pat) ?>)'>
+                                                <span class="badge bg-success"><i class="bi bi-pencil-square fa-lg"></i></span>
+                                            </a>
+                                            <a class="text-danger mx-1" href="index.php?delete=<?= $pat['IdPatient'] ?>" onclick="return confirm('Voulez-vous vraiment supprimer ce patient ?')">
+                                                <span class="badge bg-danger"><i class="bi bi-trash fa-lg"></i></span>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -116,18 +126,10 @@ ob_start();
                     <div class="row">
                         <!-- Colonne gauche -->
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <input type="text" name="Nom" id="Nom" class="form-control" placeholder="Nom" required>
-                            </div>
-                            <div class="mb-3">
-                                <input type="text" name="PostNom" id="PostNom" class="form-control" placeholder="Post-nom" required>
-                            </div>
-                            <div class="mb-3">
-                                <input type="text" name="Prenom" id="Prenom" class="form-control" placeholder="Prénom" required>
-                            </div>
-                            <div class="mb-3">
-                                <input type="date" name="DateNaissance" id="DateNaissance" class="form-control" placeholder="Date de naissance">
-                            </div>
+                            <div class="mb-3"><input type="text" name="Nom" id="Nom" class="form-control" placeholder="Nom" required></div>
+                            <div class="mb-3"><input type="text" name="PostNom" id="PostNom" class="form-control" placeholder="Post-nom" required></div>
+                            <div class="mb-3"><input type="text" name="Prenom" id="Prenom" class="form-control" placeholder="Prénom" required></div>
+                            <div class="mb-3"><input type="date" name="DateNaissance" id="DateNaissance" class="form-control"></div>
                             <div class="mb-3">
                                 <select name="Sexe" id="Sexe" class="form-control">
                                     <option value="">Sélectionner le sexe</option>
@@ -139,21 +141,11 @@ ob_start();
 
                         <!-- Colonne droite -->
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <input type="text" name="Adresse" id="Adresse" class="form-control" placeholder="Adresse">
-                            </div>
-                            <div class="mb-3">
-                                <input type="text" name="Telephone" id="Telephone" class="form-control" placeholder="Téléphone">
-                            </div>
-                            <div class="mb-3">
-                                <input type="email" name="Email" id="Email" class="form-control" placeholder="Email">
-                            </div>
-                            <div class="mb-3">
-                                <input type="text" name="NumAssurance" id="NumAssurance" class="form-control" placeholder="Numéro Assurance">
-                            </div>
-                            <div class="mb-3">
-                                <input type="text" name="GroupeSanguin" id="GroupeSanguin" class="form-control" placeholder="Groupe Sanguin">
-                            </div>
+                            <div class="mb-3"><input type="text" name="Adresse" id="Adresse" class="form-control" placeholder="Adresse"></div>
+                            <div class="mb-3"><input type="text" name="Telephone" id="Telephone" class="form-control" placeholder="Téléphone"></div>
+                            <div class="mb-3"><input type="email" name="Email" id="Email" class="form-control" placeholder="Email"></div>
+                            <div class="mb-3"><input type="text" name="NumAssurance" id="NumAssurance" class="form-control" placeholder="Numéro Assurance"></div>
+                            <div class="mb-3"><input type="text" name="GroupeSanguin" id="GroupeSanguin" class="form-control" placeholder="Groupe Sanguin"></div>
                         </div>
                     </div>
 
@@ -200,7 +192,7 @@ setTimeout(() => {
         alert.classList.add('fade', 'show');
         setTimeout(() => alert.remove(), 500);
     });
-}, 2000);
+}, 3000);
 </script>
 
 <?php

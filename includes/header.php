@@ -3,7 +3,7 @@
     <div class="d-flex align-items-center justify-content-between">
         <a href="index.html" class="logo d-flex align-items-center">
             <img src="assets/img/armoirie.png" alt="">
-            <span class="d-none d-lg-block"> MAIRIE-GOMA</span>
+            <span class="d-none d-lg-block"> Nyakunde System</span>
         </a>
         <i class="bi bi-list toggle-sidebar-btn"></i>
     </div><!-- End Logo -->
