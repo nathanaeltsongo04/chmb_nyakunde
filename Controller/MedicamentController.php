@@ -1,12 +1,12 @@
 <?php
-require_once "../model/Medicament.php";
-require_once "../config/Database.php";
+require_once __DIR__ . '/../model/Medicament.php';
+require_once __DIR__ . '/../config/Database.php';
 
 class MedicamentController {
     private $medicament;
 
     public function __construct() {
-        global $db;
+        $db = (new Database())->getConnection();
         $this->medicament = new Medicament($db);
     }
 

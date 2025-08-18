@@ -16,13 +16,13 @@
                 <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
                     <img src="assets/img/profile-img.png" alt="Profile" class="rounded-circle">
                     <span
-                        class="d-none d-md-block dropdown-toggle ps-2"><?= $_SESSION["postnom"] . " " . $_SESSION["prenom"] ?></span>
+                        class="d-none d-md-block dropdown-toggle ps-2">Nathanael Tsongo</span>
                 </a><!-- End Profile Iamge Icon -->
 
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
                     <li class="dropdown-header">
-                        <h6><?= $_SESSION["postnom"] . " " . $_SESSION["prenom"] ?></h6>
-                        <span><?= $_SESSION['fonction'] ?></span>
+                        <h6>Nathan</h6>
+                        <span>ADMIN</span>
                     </li>
                     <li>
                         <hr class="dropdown-divider">

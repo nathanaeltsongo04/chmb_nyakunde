@@ -1,12 +1,12 @@
 <?php
-require_once "../model/Laborantin.php";
-require_once "../config/Database.php";
+require_once __DIR__ . '/../model/Laborantin.php';
+require_once __DIR__ . '/../config/Database.php';
 
 class LaborantinController {
     private $laborantin;
 
     public function __construct() {
-        global $db;
+        $db = (new Database())->getConnection();
         $this->laborantin = new Laborantin($db);
     }
 

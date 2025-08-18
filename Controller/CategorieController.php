@@ -1,12 +1,12 @@
 <?php
-require_once "../model/Categorie.php";
-require_once "../config/Database.php";
+require_once __DIR__ . '/../model/Categorie.php';
+require_once __DIR__ . '/../config/Database.php';
 
 class CategorieController {
     private $categorie;
 
     public function __construct() {
-        global $db;
+        $db = (new Database())->getConnection();
         $this->categorie = new Categorie($db);
     }
 
