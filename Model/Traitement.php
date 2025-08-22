@@ -1,20 +1,19 @@
 <?php
-
 class Traitement {
     private $conn;
-    private $table = "Traitements";
+    private $table = "traitement";
 
     public function __construct($db) {
         $this->conn = $db;
     }
 
-    // Lire tous les traitements
+    // Récupérer tous les traitements
     public function getAll() {
         $result = $this->conn->query("SELECT * FROM {$this->table}");
         return $result->fetch_all(MYSQLI_ASSOC);
     }
 
-    // Lire un traitement par ID
+    // Récupérer un traitement par ID
     public function getById($id) {
         $stmt = $this->conn->prepare("SELECT * FROM {$this->table} WHERE IdTraitement = ?");
         $stmt->bind_param("i", $id);
@@ -24,32 +23,27 @@ class Traitement {
 
     // Créer un traitement
     public function create($data) {
-        $stmt = $this->conn->prepare("INSERT INTO {$this->table} 
-            (Description, DateDebut, DateFin, IdPatient, IdMedecin) 
-            VALUES (?, ?, ?, ?, ?)");
+        $stmt = $this->conn->prepare("INSERT INTO {$this->table} (IdMedecin, IdPatient, Description, DateDebut, DateFin) VALUES (?, ?, ?, ?, ?)");
         $stmt->bind_param(
-            "sssii", 
-            $data['Description'], 
-            $data['DateDebut'], 
-            $data['DateFin'], 
-            $data['IdPatient'], 
-            $data['IdMedecin']
+            "iisss",
+            $data['IdMedecin'],
+            $data['IdPatient'],
+            $data['Description'],
+            $data['DateDebut'],
+            $data['DateFin']
         );
         return $stmt->execute();
     }
 
     // Mettre à jour un traitement
     public function update($id, $data) {
-        $stmt = $this->conn->prepare("UPDATE {$this->table} 
-            SET Description=?, DateDebut=?, DateFin=?, IdPatient=?, IdMedecin=? 
-            WHERE IdTraitement=?");
+        $stmt = $this->conn->prepare("UPDATE {$this->table} SET IdPatient=?, Description=?, DateDebut=?, DateFin=? WHERE IdTraitement=?");
         $stmt->bind_param(
-            "sssiii", 
-            $data['Description'], 
-            $data['DateDebut'], 
-            $data['DateFin'], 
-            $data['IdPatient'], 
-            $data['IdMedecin'], 
+            "isssi",
+            $data['IdPatient'],
+            $data['Description'],
+            $data['DateDebut'],
+            $data['DateFin'],
             $id
         );
         return $stmt->execute();
@@ -62,3 +56,4 @@ class Traitement {
         return $stmt->execute();
     }
 }
+?>

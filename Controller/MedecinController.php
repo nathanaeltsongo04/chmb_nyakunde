@@ -1,11 +1,13 @@
 <?php
 require_once __DIR__ . '/../model/Medecin.php';
+require_once __DIR__ . '/../config/Database.php';
 
 class MedecinController {
     private $model;
 
-    public function __construct($db) {
-        $this->model = new Medecin($db);
+    public function __construct() {
+        $db = new Database();
+        $this->model = new Medecin($db->getConnection());
     }
 
     public function index() {
@@ -14,10 +16,6 @@ class MedecinController {
 
     public function store($data) {
         return $this->model->create($data);
-    }
-
-    public function edit($id) {
-        return $this->model->getById($id);
     }
 
     public function update($id, $data) {

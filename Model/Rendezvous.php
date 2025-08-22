@@ -1,20 +1,19 @@
 <?php
-
 class RendezVous {
     private $conn;
-    private $table = "RendezVous";
+    private $table = "rendezvous";
 
     public function __construct($db) {
         $this->conn = $db;
     }
 
-    // Lire tous les rendez-vous
+    // Récupérer tous les rendez-vous
     public function getAll() {
         $result = $this->conn->query("SELECT * FROM {$this->table}");
         return $result->fetch_all(MYSQLI_ASSOC);
     }
 
-    // Lire un rendez-vous par ID
+    // Récupérer un rendez-vous par ID
     public function getById($id) {
         $stmt = $this->conn->prepare("SELECT * FROM {$this->table} WHERE IdRendezVous = ?");
         $stmt->bind_param("i", $id);
@@ -24,15 +23,13 @@ class RendezVous {
 
     // Créer un rendez-vous
     public function create($data) {
-        $stmt = $this->conn->prepare("INSERT INTO {$this->table} 
-            (DateHeure, IdPatient, IdMedecin, Objet, Statut) 
-            VALUES (?, ?, ?, ?, ?)");
+        $stmt = $this->conn->prepare("INSERT INTO {$this->table} (DateHeure, IdPatient, IdMedecin, Objet, Statut) VALUES (?, ?, ?, ?, ?)");
         $stmt->bind_param(
-            "siiss", 
-            $data['DateHeure'], 
-            $data['IdPatient'], 
-            $data['IdMedecin'], 
-            $data['Objet'], 
+            "siiss",
+            $data['DateHeure'],
+            $data['IdPatient'],
+            $data['IdMedecin'],
+            $data['Objet'],
             $data['Statut']
         );
         return $stmt->execute();
@@ -40,16 +37,13 @@ class RendezVous {
 
     // Mettre à jour un rendez-vous
     public function update($id, $data) {
-        $stmt = $this->conn->prepare("UPDATE {$this->table} 
-            SET DateHeure=?, IdPatient=?, IdMedecin=?, Objet=?, Statut=? 
-            WHERE IdRendezVous=?");
+        $stmt = $this->conn->prepare("UPDATE {$this->table} SET DateHeure=?, IdPatient=?, Objet=?, Statut=? WHERE IdRendezVous=?");
         $stmt->bind_param(
-            "siissi", 
-            $data['DateHeure'], 
-            $data['IdPatient'], 
-            $data['IdMedecin'], 
-            $data['Objet'], 
-            $data['Statut'], 
+            "sissi",
+            $data['DateHeure'],
+            $data['IdPatient'],
+            $data['Objet'],
+            $data['Statut'],
             $id
         );
         return $stmt->execute();
@@ -62,3 +56,4 @@ class RendezVous {
         return $stmt->execute();
     }
 }
+?>

@@ -19,15 +19,54 @@ class Medecin {
         return $stmt->get_result()->fetch_assoc();
     }
 
+    // Générer automatiquement un matricule unique
+    private function generateMatricule() {
+        $prefix = "MED"; // préfixe pour les médecins
+        $uniquePart = time(); // timestamp pour garantir l'unicité
+        return $prefix . $uniquePart;
+    }
+
     public function create($data) {
-        $stmt = $this->conn->prepare("INSERT INTO {$this->table} (Nom, PostNom, Prenom, Specialite, Telephone, Email, Adresse, NumLicence) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssssss", $data['Nom'], $data['PostNom'], $data['Prenom'], $data['Specialite'], $data['Telephone'], $data['Email'], $data['Adresse'], $data['NumLicence']);
-        return $stmt->execute();
+        // Génération du matricule automatique
+        $matricule = $this->generateMatricule();
+
+        $stmt = $this->conn->prepare(
+            "INSERT INTO {$this->table} (Nom, PostNom, Prenom, Specialite, Telephone, Email, Adresse, NumLicence, Matricule) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        );
+        $stmt->bind_param(
+            "sssssssss", 
+            $data['Nom'], 
+            $data['PostNom'], 
+            $data['Prenom'], 
+            $data['Specialite'], 
+            $data['Telephone'], 
+            $data['Email'], 
+            $data['Adresse'], 
+            $data['NumLicence'], 
+            $matricule
+        );
+        return $stmt->execute() ? $matricule : false; // retourne le matricule généré
     }
 
     public function update($id, $data) {
-        $stmt = $this->conn->prepare("UPDATE {$this->table} SET Nom=?, PostNom=?, Prenom=?, Specialite=?, Telephone=?, Email=?, Adresse=?, NumLicence=? WHERE IdMedecin=?");
-        $stmt->bind_param("ssssssssi", $data['Nom'], $data['PostNom'], $data['Prenom'], $data['Specialite'], $data['Telephone'], $data['Email'], $data['Adresse'], $data['NumLicence'], $id);
+        $stmt = $this->conn->prepare(
+            "UPDATE {$this->table} 
+             SET Nom=?, PostNom=?, Prenom=?, Specialite=?, Telephone=?, Email=?, Adresse=?, NumLicence=? 
+             WHERE IdMedecin=?"
+        );
+        $stmt->bind_param(
+            "ssssssssi", 
+            $data['Nom'], 
+            $data['PostNom'], 
+            $data['Prenom'], 
+            $data['Specialite'], 
+            $data['Telephone'], 
+            $data['Email'], 
+            $data['Adresse'], 
+            $data['NumLicence'], 
+            $id
+        );
         return $stmt->execute();
     }
 

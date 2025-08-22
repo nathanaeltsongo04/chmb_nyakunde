@@ -1,12 +1,12 @@
 <?php
-require_once "../model/Traitement.php";
-require_once "../config/Database.php";
+require_once __DIR__ . '/../model/Traitement.php';
+require_once __DIR__ . '/../config/Database.php';
 
 class TraitementController {
     private $traitement;
 
     public function __construct() {
-        global $db;
+        $db = (new Database())->getConnection();
         $this->traitement = new Traitement($db);
     }
 
@@ -30,3 +30,4 @@ class TraitementController {
         return $this->traitement->delete($id);
     }
 }
+?>

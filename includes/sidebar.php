@@ -4,7 +4,7 @@
 
         <!-- Dashboard -->
         <li class="nav-item">
-            <a class="nav-link active" href="/chmb_nyakunde/statistiques.php">
+            <a class="nav-link active" href="/chmb_nyakunde/View/Statistique/index.php">
                 <i class="bi bi-speedometer2"></i>
                 <span>Tableau de Bord</span>
                 <span class="badge bg-primary ms-auto">3</span>
@@ -103,7 +103,7 @@
 
         <!-- Utilisateurs -->
         <li class="nav-item">
-            <a class="nav-link collapsed" href="/chmb_nyakunde/utilisateurs.php">
+            <a class="nav-link collapsed" href="/chmb_nyakunde/View/Utilisateur/index.php">
                 <i class="bi bi-people-fill"></i>
                 <span>Utilisateurs</span>
             </a>

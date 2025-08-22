@@ -13,6 +13,7 @@ CREATE TABLE Examen (
 -- Table Medecin
 CREATE TABLE Medecin (
     IdMedecin INT AUTO_INCREMENT PRIMARY KEY,
+    Matricule VARCHAR(50) NOT NULL UNIQUE, -- ajout du matricule
     Nom VARCHAR(100) NOT NULL,
     PostNom VARCHAR(100) NOT NULL,
     Prenom VARCHAR(100) NOT NULL,
@@ -26,6 +27,7 @@ CREATE TABLE Medecin (
 -- Table Laborantin
 CREATE TABLE Laborantin (
     IdLaborantin INT AUTO_INCREMENT PRIMARY KEY,
+    Matricule VARCHAR(50) NOT NULL UNIQUE, -- ajout du matricule
     Nom VARCHAR(100) NOT NULL,
     PostNom VARCHAR(100) NOT NULL,
     Prenom VARCHAR(100) NOT NULL,
@@ -59,9 +61,9 @@ CREATE TABLE Medicament (
     Prix DECIMAL(10,2) DEFAULT 0
 );
 
--- Table Infirmier
 CREATE TABLE Infirmier (
     IdInfirmier INT AUTO_INCREMENT PRIMARY KEY,
+    Matricule VARCHAR(50) NOT NULL UNIQUE, -- ajout du matricule
     Nom VARCHAR(100) NOT NULL,
     PostNom VARCHAR(100) NOT NULL,
     Prenom VARCHAR(100) NOT NULL,
@@ -227,3 +229,16 @@ CREATE TABLE Concerner (
     FOREIGN KEY (IdCategorie) REFERENCES Categorie(IdCategorie),
     FOREIGN KEY (IdMedicament) REFERENCES Medicament(IdMedicament)
 );
+
+
+-- Table users
+CREATE TABLE users (
+    IdUser INT PRIMARY KEY AUTO_INCREMENT,
+    PersonnelId INT NOT NULL,
+    Username VARCHAR(100) NOT NULL UNIQUE,
+    Email VARCHAR(150) NOT NULL UNIQUE,
+    Password VARCHAR(255) NOT NULL,
+    Role ENUM('super_admin','admin','medecin','infirmier','laborantin','caissier') NOT NULL
+);
+
+

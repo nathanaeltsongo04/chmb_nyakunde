@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
@@ -38,12 +39,14 @@
             color: white;
             text-shadow: 1px 1px 3px #000;
         }
+
         .feature-card img {
             height: 200px;
             object-fit: cover;
         }
     </style>
 </head>
+
 <body>
 
     <!-- Navbar -->
@@ -59,6 +62,32 @@
                     <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
                     <li class="nav-item"><a class="nav-link" href="#promo">Promo</a></li>
                     <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+
+                    <li class="nav-item dropdown pe-3 text-bold">
+                        <!-- Lien vers login avec icône personne -->
+                        <a class="nav-link nav-profile d-flex align-items-center pe-0" href="login.php" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle fs-6"></i>
+                            <span class="d-none d-md-block dropdown-toggle ps-2"></span>
+                        </a><!-- End Profile Icon -->
+
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center" href="./View/Auth/login.php">
+                                    <i class="bi bi-person"></i>
+                                    <span>Se connecter</span>
+                                </a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center" href="./View/Auth/register.php">
+                                    <i class="bi bi-person-plus"></i>
+                                    <span>Créer un compte</span>
+                                </a>
+                            </li>
+                        </ul><!-- End Profile Dropdown Items -->
+                    </li><!-- End Profile Nav -->
                 </ul>
             </div>
         </div>
@@ -66,41 +95,44 @@
 
     <!-- Hero Section -->
     <header class="hero text-center">
-    <div class="overlay"></div>
-    <div class="container">
-        <h1 class="display-4 fw-bolder">Bienvenue au Centre Hospitalier Nyakunde</h1>
-        <p class="lead mb-4">Des soins de qualité pour tous, avec des spécialistes à votre service.</p>
-        <a href="./View/Medecin/index.php" class="btn btn-light btn-lg me-2">Nos Médecins</a>
-        <a href="./View/Examen/index.php" class="btn btn-outline-light btn-lg">Nos Examens</a>
-    </div>
-</header>
+        <div class="overlay"></div>
+        <div class="container">
+            <h1 class="display-4 fw-bolder">Bienvenue au Centre Hospitalier Nyakunde</h1>
+            <p class="lead mb-4">Des soins de qualité pour tous, avec des spécialistes à votre service.</p>
+            <a href="./View/Medecin/index.php" class="btn btn-light btn-lg me-2">Nos Médecins</a>
+            <a href="./View/Examen/index.php" class="btn btn-outline-light btn-lg">Nos Examens</a>
+        </div>
+    </header>
 
-<style>
-.hero {
-    position: relative;
-    height: 80vh; /* ajuste la hauteur selon ton besoin */
-    background: url('assets/img/hopital.jpg') center center/cover no-repeat;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    text-shadow: 1px 1px 3px #000;
-}
+    <style>
+        .hero {
+            position: relative;
+            height: 80vh;
+            /* ajuste la hauteur selon ton besoin */
+            background: url('assets/img/hopital.jpg') center center/cover no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-shadow: 1px 1px 3px #000;
+        }
 
-.hero .overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.4); /* teinte sombre pour lisibilité du texte */
-}
+        .hero .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            /* teinte sombre pour lisibilité du texte */
+        }
 
-.hero .container {
-    position: relative; /* pour que le texte soit au-dessus de l'overlay */
-    z-index: 1;
-}
-</style>
+        .hero .container {
+            position: relative;
+            /* pour que le texte soit au-dessus de l'overlay */
+            z-index: 1;
+        }
+    </style>
 
 
     <!-- Services Section -->
@@ -208,4 +240,5 @@
     <!-- Vendor JS Files -->
     <script src="./assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

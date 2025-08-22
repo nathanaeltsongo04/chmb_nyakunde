@@ -1,4 +1,14 @@
 <?php
+// Toujours démarrer la session en premier
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+
+    
+}
+
+
+
+
 class Database {
     private $host = "localhost";
     private $db_name = "chmb_nyakunde_db";

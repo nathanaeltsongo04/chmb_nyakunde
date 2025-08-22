@@ -1,32 +1,33 @@
 <?php
-require_once "../model/RendezVous.php";
-require_once "../config/Database.php";
+require_once __DIR__ . '/../model/RendezVous.php';
+require_once __DIR__ . '/../config/Database.php';
 
 class RendezVousController {
-    private $rendezVous;
+    private $rendezvous;
 
     public function __construct() {
-        global $db;
-        $this->rendezVous = new RendezVous($db);
+        $db = (new Database())->getConnection();
+        $this->rendezvous = new RendezVous($db);
     }
 
     public function index() {
-        return $this->rendezVous->getAll();
+        return $this->rendezvous->getAll();
     }
 
     public function show($id) {
-        return $this->rendezVous->getById($id);
+        return $this->rendezvous->getById($id);
     }
 
     public function store($data) {
-        return $this->rendezVous->create($data);
+        return $this->rendezvous->create($data);
     }
 
     public function update($id, $data) {
-        return $this->rendezVous->update($id, $data);
+        return $this->rendezvous->update($id, $data);
     }
 
     public function destroy($id) {
-        return $this->rendezVous->delete($id);
+        return $this->rendezvous->delete($id);
     }
 }
+?>

@@ -20,31 +20,14 @@ class Laborantin {
     }
 
     public function create($data) {
-        $stmt = $this->conn->prepare("INSERT INTO {$this->table} (Nom, PostNom, Prenom, Telephone, Email, Adresse) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param(
-            "ssssss",
-            $data['Nom'],
-            $data['PostNom'],
-            $data['Prenom'],
-            $data['Telephone'],
-            $data['Email'],
-            $data['Adresse']
-        );
+        $stmt = $this->conn->prepare("INSERT INTO {$this->table} (Nom, PostNom, Prenom, Specialite, Telephone, Email, Adresse, NumLicence) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssssss", $data['Nom'], $data['PostNom'], $data['Prenom'], $data['Specialite'], $data['Telephone'], $data['Email'], $data['Adresse'], $data['NumLicence']);
         return $stmt->execute();
     }
 
     public function update($id, $data) {
-        $stmt = $this->conn->prepare("UPDATE {$this->table} SET Nom=?, PostNom=?, Prenom=?, Telephone=?, Email=?, Adresse=? WHERE IdLaborantin=?");
-        $stmt->bind_param(
-            "ssssssi",
-            $data['Nom'],
-            $data['PostNom'],
-            $data['Prenom'],
-            $data['Telephone'],
-            $data['Email'],
-            $data['Adresse'],
-            $id
-        );
+        $stmt = $this->conn->prepare("UPDATE {$this->table} SET Nom=?, PostNom=?, Prenom=?, Specialite=?, Telephone=?, Email=?, Adresse=?, NumLicence=? WHERE IdLaborantin=?");
+        $stmt->bind_param("ssssssssi", $data['Nom'], $data['PostNom'], $data['Prenom'], $data['Specialite'], $data['Telephone'], $data['Email'], $data['Adresse'], $data['NumLicence'], $id);
         return $stmt->execute();
     }
 

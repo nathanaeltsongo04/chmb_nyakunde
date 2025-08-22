@@ -1,7 +1,13 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+?>
+
 <!-- ======= Header ======= -->
 <header id="header" class="header fixed-top d-flex align-items-center">
     <div class="d-flex align-items-center justify-content-between">
-        <a href="index.html" class="logo d-flex align-items-center">
+        <a href="index.php" class="logo d-flex align-items-center">
             <img src="assets/img/armoirie.png" alt="">
             <span class="d-none d-lg-block"> Nyakunde System</span>
         </a>
@@ -12,17 +18,17 @@
         <ul class="d-flex align-items-center">
 
             <li class="nav-item dropdown pe-3">
-
                 <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
                     <img src="assets/img/profile-img.png" alt="Profile" class="rounded-circle">
-                    <span
-                        class="d-none d-md-block dropdown-toggle ps-2">Nathanael Tsongo</span>
-                </a><!-- End Profile Iamge Icon -->
+                    <span class="d-none d-md-block dropdown-toggle ps-2">
+                        <?= isset($_SESSION['nom_complet']) ? htmlspecialchars($_SESSION['nom_complet']) : "Invité" ?>
+                    </span>
+                </a><!-- End Profile Image Icon -->
 
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
                     <li class="dropdown-header">
-                        <h6>Nathan</h6>
-                        <span>ADMIN</span>
+                        <h6><?= isset($_SESSION['nom_complet']) ? htmlspecialchars($_SESSION['nom_complet']) : "Utilisateur" ?></h6>
+                        <span><?= isset($_SESSION['role']) ? htmlspecialchars($_SESSION['role']) : "Invité" ?></span>
                     </li>
                     <li>
                         <hr class="dropdown-divider">
@@ -39,16 +45,13 @@
                     </li>
 
                     <li>
-                        <a class="dropdown-item d-flex align-items-center" href="./controller/sedeconnecter.php">
+                        <a class="dropdown-item d-flex align-items-center" href="/chmb_nyakunde/View/Auth/logout.php">
                             <i class="bi bi-box-arrow-right"></i>
-                            <span>Se Deconnecter</span>
+                            <span>Se Déconnecter</span>
                         </a>
                     </li>
-
                 </ul><!-- End Profile Dropdown Items -->
-            </li><!-- End Profile Nav -->
-
+            </li>
         </ul>
-    </nav><!-- End Icons Navigation -->
-
+    </nav>
 </header><!-- End Header -->
