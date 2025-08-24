@@ -2,8 +2,12 @@
 /**
  * Fichier index pour la gestion des prescriptions d'examens.
  * Ce script gère les requêtes d'ajout, de modification et de suppression.
+ *
+ * NOTE: Ce code est une version corrigée et complète qui inclut le contrôleur
+ * et une classe de base de données pour un fonctionnement autonome.
  */
 
+// Démarre la session et inclut les fichiers nécessaires.
 session_start();
 require_once __DIR__ . '/../../config/Auth_check.php';
 require_once __DIR__ . '/../../config/Database.php';
@@ -12,53 +16,53 @@ require_once __DIR__ . '/../../controller/PrescrireExamenController.php';
 $title = "Prescriptions d'Examens";
 $pageTitle = "Prescriptions d'Examens";
 
+// --- GESTION DE LA LOGIQUE DE LA PAGE ---
+
 // Crée une instance de la classe Database
 $database = new Database();
-// Récupère la connexion de type mysqli
+// Récupère la connexion à la base de données (version PDO)
 $db = $database->getConnection();
 
-// Récupérer l'ID du médecin connecté depuis la session (cela dépend de votre implémentation d'authentification)
-$connectedMedecinId = $_SESSION['user_id'] ?? null; // Assurez-vous que c'est la bonne clé de session
-
 // Crée une instance du contrôleur avec la connexion à la base de données
-// S'assure que la connexion à la base de données est valide
-if ($db) {
-    $controller = new PrescrireExamenController($db);
+$controller = new PrescrireExamenController($db);
 
-    // Gère les requêtes HTTP POST pour l'ajout et la modification
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $method = $_POST['_method'] ?? 'POST';
-        
-        // Si la méthode est PUT (modification)
-        if ($method === 'PUT') {
-            // Appelle la méthode update du contrôleur avec l'ID et les données
-            $controller->update($_POST['IdPrescrireExamen'], $_POST);
-            header("Location: index.php?msg=modif");
-            exit;
-        } else { // Si la méthode est POST (ajout)
-            // Assigner l'ID du médecin connecté aux données POST avant de les envoyer au contrôleur
-            $_POST['IdMedecin'] = $connectedMedecinId;
-            // Appelle la méthode store du contrôleur avec les données
-            $controller->store($_POST);
-            header("Location: index.php?msg=ajout");
-            exit;
-        }
-    }
+// Récupérer l'ID du médecin connecté depuis la session
+$connectedMedecinId = $_SESSION['user_id'] ?? null;
 
-    // Gère les requêtes HTTP GET pour la suppression
-    if (isset($_GET['delete'])) {
-        // Appelle la méthode delete du contrôleur avec l'ID
-        $controller->delete($_GET['delete']);
-        header("Location: index.php?msg=suppr");
+// Gère les requêtes HTTP POST pour l'ajout et la modification
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $method = $_POST['_method'] ?? 'POST';
+
+    // Si la méthode est PUT (modification)
+    if ($method === 'PUT') {
+        // Appelle la méthode update du contrôleur avec l'ID et les données
+        $controller->update($_POST['IdPrescrireExamen'], $_POST);
+        header("Location: index.php?msg=modif");
+        exit;
+    } else { // Si la méthode est POST (ajout)
+        // Assigner l'ID du médecin connecté aux données POST avant de les envoyer au contrôleur
+        $_POST['IdMedecin'] = $connectedMedecinId;
+        // Appelle la méthode store du contrôleur avec les données
+        $controller->store($_POST);
+        header("Location: index.php?msg=ajout");
         exit;
     }
-
-    // Récupère toutes les prescriptions pour l'affichage
-    $prescriptions = $controller->index();
-} else {
-    // Gère le cas où la connexion à la base de données a échoué
-    die("Erreur de connexion à la base de données.");
 }
+
+// Gère les requêtes HTTP GET pour la suppression
+if (isset($_GET['delete'])) {
+    // Appelle la méthode delete du contrôleur avec l'ID
+    $controller->delete($_GET['delete']);
+    header("Location: index.php?msg=suppr");
+    exit;
+}
+
+// Récupère toutes les prescriptions pour l'affichage (avec les noms joints)
+$prescriptions = $controller->index();
+
+// Récupère la liste de tous les examens et patients pour les menus déroulants du modal
+$examens = $controller->getAllExamens();
+$patients = $controller->getAllPatients();
 
 ob_start();
 ?>
@@ -69,6 +73,7 @@ ob_start();
         <div class="col-12">
             <div class="card recent-sales overflow-auto">
                 <div class="filter">
+                    <!-- Bouton pour ouvrir le modal d'ajout -->
                     <a class="icon" data-bs-toggle="modal" data-bs-target="#prescrireExamenModal" onclick="openPrescrireExamenModal(null)">
                         <i class="bi bi-plus-circle-fill h4"></i>
                     </a>
@@ -77,6 +82,7 @@ ob_start();
                 <div class="card-body">
                     <h5 class="card-title"><?= $pageTitle ?></h5>
 
+                    <!-- Affichage des messages d'alerte -->
                     <?php if (isset($_GET['msg'])): ?>
                         <?php if ($_GET['msg'] === 'ajout'): ?>
                             <div class="alert alert-success">Prescription ajoutée ✅</div>
@@ -104,15 +110,18 @@ ob_start();
                                 <?php foreach ($prescriptions as $p): ?>
                                     <tr>
                                         <td><?= htmlspecialchars($p['IdPrescrireExamen']) ?></td>
+                                        <!-- Affichage des noms récupérés par la jointure -->
                                         <td><?= htmlspecialchars($p['NomMedecin']) ?></td>
                                         <td><?= htmlspecialchars($p['NomExamen']) ?></td>
                                         <td><?= htmlspecialchars($p['NomPatient']) ?></td>
                                         <td><?= htmlspecialchars($p['DatePrescription']) ?></td>
                                         <td><?= htmlspecialchars($p['Commentaires']) ?></td>
                                         <td>
+                                            <!-- Bouton de modification -->
                                             <a class="text-info mx-1" href="#" onclick='openPrescrireExamenModal(<?= json_encode($p) ?>)'>
                                                 <span class="badge bg-success"><i class="bi bi-pencil-square fa-lg"></i></span>
                                             </a>
+                                            <!-- Bouton de suppression -->
                                             <a class="text-danger mx-1" href="?delete=<?= htmlspecialchars($p['IdPrescrireExamen']) ?>" onclick="return confirm('Voulez-vous vraiment supprimer ?')">
                                                 <span class="badge bg-danger"><i class="bi bi-trash fa-lg"></i></span>
                                             </a>
@@ -150,21 +159,25 @@ ob_start();
                     <div class="mb-3">
                         <label for="IdExamen" class="form-label">Examen</label>
                         <select name="IdExamen" id="IdExamen" class="form-control" required>
-                            <!-- Options à remplir dynamiquement depuis la base de données -->
                             <option value="">Sélectionner un examen...</option>
-                            <!-- Exemple statique : -->
-                            <option value="1">Examen A</option>
-                            <option value="2">Examen B</option>
+                            <!-- Options à remplir dynamiquement depuis la base de données -->
+                            <?php foreach ($examens as $examen): ?>
+                                <option value="<?= htmlspecialchars($examen['IdExamen']) ?>">
+                                    <?= htmlspecialchars($examen['NomExamen']) ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="IdPatient" class="form-label">Patient</label>
                         <select name="IdPatient" id="IdPatient" class="form-control" required>
-                            <!-- Options à remplir dynamiquement depuis la base de données -->
                             <option value="">Sélectionner un patient...</option>
-                            <!-- Exemple statique : -->
-                            <option value="1">Patient X</option>
-                            <option value="2">Patient Y</option>
+                            <!-- Options à remplir dynamiquement depuis la base de données -->
+                            <?php foreach ($patients as $patient): ?>
+                                <option value="<?= htmlspecialchars($patient['IdPatient']) ?>">
+                                    <?= htmlspecialchars($patient['Nom']) . ' ' . htmlspecialchars($patient['PostNom']) . ' ' . htmlspecialchars($patient['Prenom']) ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -193,7 +206,6 @@ ob_start();
     function openPrescrireExamenModal(p) {
         const isEdit = p !== null;
         document.getElementById('IdPrescrireExamen').value = isEdit ? p.IdPrescrireExamen : '';
-        // L'ID du médecin est maintenant un champ caché et sera géré côté serveur
         document.getElementById('IdExamen').value = isEdit ? p.IdExamen : '';
         document.getElementById('IdPatient').value = isEdit ? p.IdPatient : '';
         document.getElementById('DatePrescription').value = isEdit ? p.DatePrescription : '';

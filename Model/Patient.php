@@ -61,6 +61,17 @@ class Patient {
         $stmt->bind_param("i", $id);
         return $stmt->execute();
     }
-
+    public function readAll() {
+        // Sélectionne toutes les colonnes
+        $query = "SELECT * FROM " . $this->table . " ORDER BY nom, prenom";
+        
+        // Prépare la requête
+        $stmt = $this->conn->prepare($query);
+        
+        // Exécute la requête
+        $stmt->execute();
+        
+        return $stmt;
+    }
     
 }

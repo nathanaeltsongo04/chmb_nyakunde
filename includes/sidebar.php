@@ -72,12 +72,12 @@ $is_caissier = ($user_role == 'caissier' || $is_admin);
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/chmb_nyakunde/View/Patient/rendezvous.php">
+                            <a class="nav-link" href="/chmb_nyakunde/View/Rendezvous/index.php">
                                 <i class="bi bi-calendar-check"></i> Rendez-vous
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/chmb_nyakunde/View/Hospitalisation/index.php">
+                            <a class="nav-link" href="/chmb_nyakunde/View/Hospitaliser/index.php">
                                 <i class="bi bi-hospital"></i> Hospitalisations
                             </a>
                         </li>
@@ -99,7 +99,7 @@ $is_caissier = ($user_role == 'caissier' || $is_admin);
                     <ul class="nav flex-column ms-3">
                         <?php if ($is_medecin): ?>
                             <li class="nav-item">
-                                <a class="nav-link" href="/chmb_nyakunde/View/Consultation/index.php">
+                                <a class="nav-link" href="/chmb_nyakunde/View/Consulter/index.php">
                                     <i class="bi bi-stethoscope"></i> Consultations
                                 </a>
                             </li>
@@ -159,6 +159,42 @@ $is_caissier = ($user_role == 'caissier' || $is_admin);
             </li>
         <?php endif; ?>
 
+        <!-- Rapports (Visible pour Admin et Super Admin) -->
+        <?php if ($is_admin || $is_super_admin): ?>
+            <li class="nav-heading text-info">Rapports</li>
+            <li class="nav-item">
+                <a class="nav-link collapsed" data-bs-toggle="collapse" href="#rapports-nav" role="button" aria-expanded="false" aria-controls="rapports-nav">
+                    <i class="bi bi-bar-chart-line"></i>
+                    <span>Rapports</span>
+                    <i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <div class="collapse" id="rapports-nav">
+                    <ul class="nav flex-column ms-3">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/chmb_nyakunde/View/Rapport/Consultation/index.php">
+                                <i class="bi bi-file-earmark-bar-graph"></i> Rapports de consultation
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/chmb_nyakunde/View/Rapport/Patient/index.php">
+                                <i class="bi bi-people-fill"></i> Rapports des patients
+                            </a>
+                        </li>
+                        <!-- <li class="nav-item">
+                            <a class="nav-link" href="/chmb_nyakunde/View/Rapport/financiers.php">
+                                <i class="bi bi-currency-dollar"></i> Rapports financiers
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/chmb_nyakunde/View/Rapport/activite.php">
+                                <i class="bi bi-clipboard-data"></i> Rapports d'activité
+                            </a>
+                        </li> -->
+                    </ul>
+                </div>
+            </li>
+        <?php endif; ?>
+
         <!-- Administration & Paramètres -->
         <?php if ($is_super_admin): ?>
             <li class="nav-heading text-danger">Administration</li>
@@ -180,12 +216,12 @@ $is_caissier = ($user_role == 'caissier' || $is_admin);
                     <span>Catégories</span>
                 </a>
             </li>
-            <li class="nav-item">
+            <!-- <li class="nav-item">
                 <a class="nav-link collapsed" href="/chmb_nyakunde/parametres.php">
                     <i class="bi bi-gear"></i>
                     <span>Paramètres</span>
                 </a>
-            </li>
+            </li> -->
         <?php endif; ?>
 
     </ul>

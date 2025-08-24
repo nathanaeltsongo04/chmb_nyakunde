@@ -109,7 +109,7 @@ ob_start();
                                     <tr>
                                         <td><?= htmlspecialchars($c['IdConsulter']) ?></td>
                                         <td><?= htmlspecialchars($c['NomMedecin']) ?></td>
-                                        <td><?= htmlspecialchars($c['NomPatient']) ?></td>
+                                        <td><?= htmlspecialchars($c['NomPatient'])." ".htmlspecialchars($c['PrenomPatient']?? '') ?> </td>
                                         <td><?= htmlspecialchars($c['DateConsultation']) ?></td>
                                         <td><?= htmlspecialchars($c['SignesVitaux']) ?></td>
                                         <td><?= htmlspecialchars($c['Diagnostic']) ?></td>
