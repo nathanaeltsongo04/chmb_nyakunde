@@ -1,32 +1,82 @@
 <?php
-require_once "../model/Examiner.php";
-require_once "../config/Database.php";
+/**
+ * Contrôleur pour la gestion des examens de laboratoire.
+ * Gère les interactions entre l'utilisateur et le modèle d'examen.
+ */
+require_once __DIR__ . '/../model/Examiner.php';
 
-class ExaminerController {
+class ExaminerController
+{
     private $examiner;
 
-    public function __construct() {
-        global $db;
+    /**
+     * Constructeur du contrôleur.
+     * @param object $db La connexion à la base de données.
+     */
+    public function __construct($db)
+    {
         $this->examiner = new Examiner($db);
     }
 
-    public function index() {
-        return $this->examiner->getAll();
+    /**
+     * Affiche la liste de tous les examens.
+     * @return array La liste des examens.
+     */
+    public function index()
+    {
+        $result = $this->examiner->index();
+        return $result->fetch_all(MYSQLI_ASSOC);
     }
 
-    public function show($id) {
-        return $this->examiner->getById($id);
+    /**
+     * Ajoute un nouvel examen.
+     * @param array $data Les données de l'examen à ajouter.
+     */
+    public function store($data)
+    {
+        $this->examiner->IdLaborantin = $data['IdLaborantin'];
+        $this->examiner->IdExamen = $data['IdExamen'];
+        $this->examiner->IdPatient = $data['IdPatient'];
+        $this->examiner->DateExamen = $data['DateExamen'];
+        $this->examiner->Resultat = $data['Resultat'];
+        $this->examiner->Remarques = $data['Remarques'];
+        $this->examiner->store();
     }
 
-    public function store($data) {
-        return $this->examiner->create($data);
+    /**
+     * Met à jour un examen existant.
+     * @param int $id L'ID de l'examen à modifier.
+     * @param array $data Les nouvelles données.
+     */
+    public function update($id, $data)
+    {
+        $this->examiner->IdExaminer = $id;
+        $this->examiner->IdExamen = $data['IdExamen'];
+        $this->examiner->IdPatient = $data['IdPatient'];
+        $this->examiner->DateExamen = $data['DateExamen'];
+        $this->examiner->Resultat = $data['Resultat'];
+        $this->examiner->Remarques = $data['Remarques'];
+        $this->examiner->update();
     }
 
-    public function update($id, $data) {
-        return $this->examiner->update($id, $data);
+    /**
+     * Supprime un examen.
+     * @param int $id L'ID de l'examen à supprimer.
+     */
+    public function delete($id)
+    {
+        $this->examiner->IdExaminer = $id;
+        $this->examiner->delete();
     }
 
-    public function destroy($id) {
-        return $this->examiner->delete($id);
+    /**
+     * Récupère tous les patients pour les datalists.
+     * @return array La liste des patients.
+     */
+    public function getAllPatients()
+    {
+        $result = $this->examiner->getAllPatients();
+        return $result->fetch_all(MYSQLI_ASSOC);
     }
 }
+?>

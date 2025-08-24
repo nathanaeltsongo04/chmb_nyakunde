@@ -1,64 +1,109 @@
 <?php
-
-class Hospitaliser {
+/**
+ * Modèle d'hospitalisation.
+ * Gère les interactions avec la table 'Hospitaliser' dans la base de données.
+ */
+class Hospitaliser
+{
+    // Connexion à la base de données et nom de la table
     private $conn;
-    private $table = "Hospitaliser";
+    private $table_name = "Hospitaliser";
 
-    public function __construct($db) {
+    // Propriétés de l'objet
+    public $IdHospitaliser;
+    public $IdPatient;
+    public $IdChambre;
+    public $DateEntree;
+    public $DateSortie;
+    public $MotifHospitalisation;
+
+    /**
+     * Constructeur avec la connexion à la base de données.
+     * @param object $db La connexion à la base de données.
+     */
+    public function __construct($db)
+    {
         $this->conn = $db;
     }
 
-    // Lire toutes les hospitalisations
-    public function getAll() {
-        $result = $this->conn->query("SELECT * FROM {$this->table}");
-        return $result->fetch_all(MYSQLI_ASSOC);
+    /**
+     * Récupère toutes les hospitalisations avec les noms associés du patient et de la chambre.
+     * @return mysqli_result Le jeu de résultats de la requête.
+     */
+    public function index()
+    {
+        // Correction de la colonne 'NomChambre' par 'Numero'
+        $query = "SELECT h.IdHospitaliser, pa.Nom AS NomPatient, c.Numero AS NomChambre, h.DateEntree, h.DateSortie, h.MotifHospitalisation
+                  FROM " . $this->table_name . " h
+                  JOIN Patient pa ON h.IdPatient = pa.IdPatient
+                  JOIN Chambre c ON h.IdChambre = c.IdChambre
+                  ORDER BY h.DateEntree DESC";
+        $result = $this->conn->query($query);
+        return $result;
     }
 
-    // Lire une hospitalisation par ID
-    public function getById($id) {
-        $stmt = $this->conn->prepare("SELECT * FROM {$this->table} WHERE IdHospitaliser = ?");
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-        return $stmt->get_result()->fetch_assoc();
+    /**
+     * Crée une nouvelle hospitalisation.
+     * @return bool Vrai si la création a réussi, sinon faux.
+     */
+    public function store()
+    {
+        $query = "INSERT INTO " . $this->table_name . " (IdPatient, IdChambre, DateEntree, DateSortie, MotifHospitalisation) VALUES (?, ?, ?, ?, ?)";
+        $stmt = $this->conn->prepare($query);
+
+        $stmt->bind_param("iisss", $this->IdPatient, $this->IdChambre, $this->DateEntree, $this->DateSortie, $this->MotifHospitalisation);
+
+        if ($stmt->execute()) {
+            return true;
+        }
+
+        return false;
     }
 
-    // Créer une hospitalisation
-    public function create($data) {
-        $stmt = $this->conn->prepare("INSERT INTO {$this->table} 
-            (IdPatient, IdChambre, DateEntree, DateSortie, MotifHospitalisation) 
-            VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param(
-            "iisss", 
-            $data['IdPatient'], 
-            $data['IdChambre'], 
-            $data['DateEntree'], 
-            $data['DateSortie'], 
-            $data['MotifHospitalisation']
-        );
-        return $stmt->execute();
+    /**
+     * Met à jour une hospitalisation existante.
+     * @return bool Vrai si la mise à jour a réussi, sinon faux.
+     */
+    public function update()
+    {
+        $query = "UPDATE " . $this->table_name . " SET IdPatient=?, IdChambre=?, DateEntree=?, DateSortie=?, MotifHospitalisation=? WHERE IdHospitaliser=?";
+        $stmt = $this->conn->prepare($query);
+
+        $stmt->bind_param("iisssi", $this->IdPatient, $this->IdChambre, $this->DateEntree, $this->DateSortie, $this->MotifHospitalisation, $this->IdHospitaliser);
+
+        if ($stmt->execute()) {
+            return true;
+        }
+
+        return false;
     }
 
-    // Mettre à jour une hospitalisation
-    public function update($id, $data) {
-        $stmt = $this->conn->prepare("UPDATE {$this->table} 
-            SET IdPatient=?, IdChambre=?, DateEntree=?, DateSortie=?, MotifHospitalisation=? 
-            WHERE IdHospitaliser=?");
-        $stmt->bind_param(
-            "iisssi", 
-            $data['IdPatient'], 
-            $data['IdChambre'], 
-            $data['DateEntree'], 
-            $data['DateSortie'], 
-            $data['MotifHospitalisation'], 
-            $id
-        );
-        return $stmt->execute();
+    /**
+     * Supprime une hospitalisation par son ID.
+     * @return bool Vrai si la suppression a réussi, sinon faux.
+     */
+    public function delete()
+    {
+        $query = "DELETE FROM " . $this->table_name . " WHERE IdHospitaliser = ?";
+        $stmt = $this->conn->prepare($query);
+
+        $stmt->bind_param("i", $this->IdHospitaliser);
+
+        if ($stmt->execute()) {
+            return true;
+        }
+
+        return false;
     }
 
-    // Supprimer une hospitalisation
-    public function delete($id) {
-        $stmt = $this->conn->prepare("DELETE FROM {$this->table} WHERE IdHospitaliser=?");
-        $stmt->bind_param("i", $id);
-        return $stmt->execute();
+    /**
+     * Récupère la liste de tous les patients.
+     * @return mysqli_result Le jeu de résultats de la requête.
+     */
+    public function getAllPatients()
+    {
+        $query = "SELECT IdPatient, Nom FROM Patient";
+        return $this->conn->query($query);
     }
 }
+?>

@@ -1,29 +1,35 @@
 <?php
 /**
- * Fichier index pour la gestion des prescriptions d'examens.
+ * Fichier index pour la gestion des prescriptions.
  * Ce script gère les requêtes d'ajout, de modification et de suppression.
  */
 
 session_start();
+// Les chemins peuvent varier en fonction de votre structure de projet
 require_once __DIR__ . '/../../config/Auth_check.php';
 require_once __DIR__ . '/../../config/Database.php';
-require_once __DIR__ . '/../../controller/PrescrireExamenController.php';
+require_once __DIR__ . '/../../controller/PrescrireMedicamentController.php'; // Nouveau contrôleur pour les prescriptions
+require_once __DIR__ . '/../../controller/MedicamentController.php'; // Pour récupérer la liste des médicaments
 
-$title = "Prescriptions d'Examens";
-$pageTitle = "Prescriptions d'Examens";
+$title = "Prescriptions";
+$pageTitle = "Prescriptions";
 
 // Crée une instance de la classe Database
 $database = new Database();
 // Récupère la connexion de type mysqli
 $db = $database->getConnection();
 
-// Récupérer l'ID du médecin connecté depuis la session (cela dépend de votre implémentation d'authentification)
-$connectedMedecinId = $_SESSION['user_id'] ?? null; // Assurez-vous que c'est la bonne clé de session
+// Récupérer l'ID du médecin connecté depuis la session (à adapter selon votre système d'authentification)
+$connectedMedecinId = $_SESSION['user_id'] ?? null; 
 
-// Crée une instance du contrôleur avec la connexion à la base de données
-// S'assure que la connexion à la base de données est valide
+// Crée des instances des contrôleurs
 if ($db) {
-    $controller = new PrescrireExamenController($db);
+    $controller = new PrescrireController($db);
+    $medicamentController = new MedicamentController($db);
+    
+    // Récupère les listes des médicaments et des patients pour les datalists
+    $medicaments = $medicamentController->index();
+    $patients = $controller->getAllPatients(); // Assumant que le PrescrireController a cette méthode
 
     // Gère les requêtes HTTP POST pour l'ajout et la modification
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -32,7 +38,7 @@ if ($db) {
         // Si la méthode est PUT (modification)
         if ($method === 'PUT') {
             // Appelle la méthode update du contrôleur avec l'ID et les données
-            $controller->update($_POST['IdPrescrireExamen'], $_POST);
+            $controller->update($_POST['IdPrescrireMedicament'], $_POST);
             header("Location: index.php?msg=modif");
             exit;
         } else { // Si la méthode est POST (ajout)
@@ -69,7 +75,7 @@ ob_start();
         <div class="col-12">
             <div class="card recent-sales overflow-auto">
                 <div class="filter">
-                    <a class="icon" data-bs-toggle="modal" data-bs-target="#prescrireExamenModal" onclick="openPrescrireExamenModal(null)">
+                    <a class="icon" data-bs-toggle="modal" data-bs-target="#prescrireModal" onclick="openPrescrireModal(null)">
                         <i class="bi bi-plus-circle-fill h4"></i>
                     </a>
                 </div>
@@ -92,10 +98,11 @@ ob_start();
                             <tr>
                                 <th>#</th>
                                 <th>Médecin</th>
-                                <th>Examen</th>
+                                <th>Médicament</th>
                                 <th>Patient</th>
                                 <th>Date Prescription</th>
-                                <th>Commentaires</th>
+                                <th>Dosage</th>
+                                <th>Durée</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -103,17 +110,18 @@ ob_start();
                             <?php if (!empty($prescriptions)): ?>
                                 <?php foreach ($prescriptions as $p): ?>
                                     <tr>
-                                        <td><?= htmlspecialchars($p['IdPrescrireExamen']) ?></td>
+                                        <td><?= htmlspecialchars($p['IdPrescrireMedicament']) ?></td>
                                         <td><?= htmlspecialchars($p['NomMedecin']) ?></td>
-                                        <td><?= htmlspecialchars($p['NomExamen']) ?></td>
+                                        <td><?= htmlspecialchars($p['NomMedicament']) ?></td>
                                         <td><?= htmlspecialchars($p['NomPatient']) ?></td>
                                         <td><?= htmlspecialchars($p['DatePrescription']) ?></td>
-                                        <td><?= htmlspecialchars($p['Commentaires']) ?></td>
+                                        <td><?= htmlspecialchars($p['Dosage']) ?></td>
+                                        <td><?= htmlspecialchars($p['Duree']) ?></td>
                                         <td>
-                                            <a class="text-info mx-1" href="#" onclick='openPrescrireExamenModal(<?= json_encode($p) ?>)'>
+                                            <a class="text-info mx-1" href="#" onclick='openPrescrireModal(<?= json_encode($p) ?>)'>
                                                 <span class="badge bg-success"><i class="bi bi-pencil-square fa-lg"></i></span>
                                             </a>
-                                            <a class="text-danger mx-1" href="?delete=<?= htmlspecialchars($p['IdPrescrireExamen']) ?>" onclick="return confirm('Voulez-vous vraiment supprimer ?')">
+                                            <a class="text-danger mx-1" href="?delete=<?= htmlspecialchars($p['IdPrescrireMedicament']) ?>" onclick="return confirm('Voulez-vous vraiment supprimer ?')">
                                                 <span class="badge bg-danger"><i class="bi bi-trash fa-lg"></i></span>
                                             </a>
                                         </td>
@@ -121,7 +129,7 @@ ob_start();
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="7">Aucune prescription trouvée.</td>
+                                    <td colspan="8">Aucune prescription trouvée.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
@@ -133,7 +141,7 @@ ob_start();
 </div>
 
 <!-- Modal pour l'ajout et la modification -->
-<div class="modal fade" id="prescrireExamenModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+<div class="modal fade" id="prescrireModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-bottom-0">
@@ -141,41 +149,45 @@ ob_start();
                 <button type="button" class="btn-close h2 fw-bold" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="prescrireExamenForm" method="POST">
-                    <input type="hidden" name="IdPrescrireExamen" id="IdPrescrireExamen">
+                <form id="prescrireForm" method="POST">
+                    <input type="hidden" name="IdPrescrireMedicament" id="IdPrescrireMedicament">
                     <input type="hidden" name="_method" id="_method" value="POST">
                     <!-- Champ caché pour l'ID du médecin, récupéré de la session -->
                     <input type="hidden" name="IdMedecin" id="IdMedecin" value="<?= htmlspecialchars($connectedMedecinId) ?>">
 
                     <div class="mb-3">
-                        <label for="IdExamen" class="form-label">Examen</label>
-                        <select name="IdExamen" id="IdExamen" class="form-control" required>
-                            <!-- Options à remplir dynamiquement depuis la base de données -->
-                            <option value="">Sélectionner un examen...</option>
-                            <!-- Exemple statique : -->
-                            <option value="1">Examen A</option>
-                            <option value="2">Examen B</option>
-                        </select>
+                        <label for="IdMedicamentInput" class="form-label">Médicament</label>
+                        <!-- Champ datalist pour les médicaments -->
+                        <input class="form-control" list="medicamentOptions" id="IdMedicamentInput" name="IdMedicamentInput" placeholder="Rechercher ou sélectionner un médicament..." required>
+                        <datalist id="medicamentOptions">
+                            <?php foreach ($medicaments as $medicament): ?>
+                                <option value="<?= htmlspecialchars($medicament['NomMedicament']) ?>" data-id="<?= htmlspecialchars($medicament['IdMedicament']) ?>">
+                            <?php endforeach; ?>
+                        </datalist>
                     </div>
                     <div class="mb-3">
-                        <label for="IdPatient" class="form-label">Patient</label>
-                        <select name="IdPatient" id="IdPatient" class="form-control" required>
-                            <!-- Options à remplir dynamiquement depuis la base de données -->
-                            <option value="">Sélectionner un patient...</option>
-                            <!-- Exemple statique : -->
-                            <option value="1">Patient X</option>
-                            <option value="2">Patient Y</option>
-                        </select>
+                        <label for="IdPatientInput" class="form-label">Patient</label>
+                        <!-- Champ datalist pour les patients -->
+                        <input class="form-control" list="patientOptions" id="IdPatientInput" name="IdPatientInput" placeholder="Rechercher ou sélectionner un patient..." required>
+                        <datalist id="patientOptions">
+                            <?php foreach ($patients as $patient): ?>
+                                <option value="<?= htmlspecialchars($patient['Nom']) ?>" data-id="<?= htmlspecialchars($patient['IdPatient']) ?>">
+                            <?php endforeach; ?>
+                        </datalist>
                     </div>
                     <div class="mb-3">
                         <label for="DatePrescription" class="form-label">Date de prescription</label>
                         <input type="date" name="DatePrescription" id="DatePrescription" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label for="Commentaires" class="form-label">Commentaires</label>
-                        <textarea name="Commentaires" id="Commentaires" class="form-control" placeholder="Commentaires"></textarea>
+                        <label for="Dosage" class="form-label">Dosage</label>
+                        <input type="text" name="Dosage" id="Dosage" class="form-control" placeholder="Dosage">
                     </div>
-
+                    <div class="mb-3">
+                        <label for="Duree" class="form-label">Durée</label>
+                        <input type="text" name="Duree" id="Duree" class="form-control" placeholder="Durée">
+                    </div>
+                    
                     <div class="text-center mt-3">
                         <button id="submitBtn" class="btn btn-secondary w-50 fw-bold" type="submit">Enregistrer</button>
                     </div>
@@ -190,22 +202,23 @@ ob_start();
      * Ouvre le modal de prescription et pré-remplit les champs si une prescription est fournie.
      * @param {object|null} p Les données de la prescription ou null pour une nouvelle prescription.
      */
-    function openPrescrireExamenModal(p) {
+    function openPrescrireModal(p) {
         const isEdit = p !== null;
-        document.getElementById('IdPrescrireExamen').value = isEdit ? p.IdPrescrireExamen : '';
-        // L'ID du médecin est maintenant un champ caché et sera géré côté serveur
-        document.getElementById('IdExamen').value = isEdit ? p.IdExamen : '';
-        document.getElementById('IdPatient').value = isEdit ? p.IdPatient : '';
+        document.getElementById('IdPrescrireMedicament').value = isEdit ? p.IdPrescrireMedicament : '';
+        document.getElementById('IdMedicamentInput').value = isEdit ? p.NomMedicament : '';
+        document.getElementById('IdPatientInput').value = isEdit ? p.NomPatient : '';
+        
         document.getElementById('DatePrescription').value = isEdit ? p.DatePrescription : '';
-        document.getElementById('Commentaires').value = isEdit ? p.Commentaires : '';
+        document.getElementById('Dosage').value = isEdit ? p.Dosage : '';
+        document.getElementById('Duree').value = isEdit ? p.Duree : '';
 
         document.getElementById('_method').value = isEdit ? 'PUT' : 'POST';
         document.getElementById('submitBtn').innerText = isEdit ? "Modifier" : "Enregistrer";
         document.getElementById('modalTitle').innerText = isEdit ? "Modifier Prescription" : "Nouvelle Prescription";
 
-        new bootstrap.Modal(document.getElementById('prescrireExamenModal')).show();
+        new bootstrap.Modal(document.getElementById('prescrireModal')).show();
     }
-
+    
     // Fonction pour masquer automatiquement les alertes
     setTimeout(() => {
         document.querySelectorAll('.alert').forEach(alert => {
@@ -213,6 +226,32 @@ ob_start();
             setTimeout(() => alert.remove(), 500);
         });
     }, 2000);
+
+    // Fonction pour gérer la soumission du formulaire et envoyer les IDs
+    document.getElementById('prescrireForm').addEventListener('submit', function(event) {
+        // Crée des champs cachés pour les IDs
+        const medicamentName = document.getElementById('IdMedicamentInput').value;
+        const patientName = document.getElementById('IdPatientInput').value;
+        
+        const medicamentId = document.querySelector(`#medicamentOptions option[value='${medicamentName}']`).dataset.id;
+        const patientId = document.querySelector(`#patientOptions option[value='${patientName}']`).dataset.id;
+        
+        const medicamentInput = document.createElement('input');
+        medicamentInput.type = 'hidden';
+        medicamentInput.name = 'IdMedicament';
+        medicamentInput.value = medicamentId;
+        this.appendChild(medicamentInput);
+
+        const patientInput = document.createElement('input');
+        patientInput.type = 'hidden';
+        patientInput.name = 'IdPatient';
+        patientInput.value = patientId;
+        this.appendChild(patientInput);
+
+        // Retire les champs d'entrée originaux pour éviter d'envoyer les noms au lieu des IDs
+        document.getElementById('IdMedicamentInput').name = '';
+        document.getElementById('IdPatientInput').name = '';
+    });
 </script>
 
 <?php

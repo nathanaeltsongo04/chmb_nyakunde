@@ -19,15 +19,50 @@ class Laborantin {
         return $stmt->get_result()->fetch_assoc();
     }
 
+    // Générer automatiquement un matricule unique
+    private function generateMatricule() {
+        $prefix = "LAB"; // préfixe pour les laborantins
+        $uniquePart = time(); // timestamp pour garantir l'unicité
+        return $prefix . $uniquePart;
+    }
+
     public function create($data) {
-        $stmt = $this->conn->prepare("INSERT INTO {$this->table} (Nom, PostNom, Prenom, Specialite, Telephone, Email, Adresse, NumLicence) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssssss", $data['Nom'], $data['PostNom'], $data['Prenom'], $data['Specialite'], $data['Telephone'], $data['Email'], $data['Adresse'], $data['NumLicence']);
-        return $stmt->execute();
+        // Génération du matricule automatique
+        $matricule = $this->generateMatricule();
+
+        $stmt = $this->conn->prepare(
+            "INSERT INTO {$this->table} (Matricule, Nom, PostNom, Prenom, Telephone, Email, Adresse) 
+             VALUES (?, ?, ?, ?, ?, ?, ?)"
+        );
+        $stmt->bind_param(
+            "sssssss", 
+            $matricule,
+            $data['Nom'], 
+            $data['PostNom'], 
+            $data['Prenom'], 
+            $data['Telephone'], 
+            $data['Email'], 
+            $data['Adresse']
+        );
+        return $stmt->execute() ? $matricule : false; // retourne le matricule généré
     }
 
     public function update($id, $data) {
-        $stmt = $this->conn->prepare("UPDATE {$this->table} SET Nom=?, PostNom=?, Prenom=?, Specialite=?, Telephone=?, Email=?, Adresse=?, NumLicence=? WHERE IdLaborantin=?");
-        $stmt->bind_param("ssssssssi", $data['Nom'], $data['PostNom'], $data['Prenom'], $data['Specialite'], $data['Telephone'], $data['Email'], $data['Adresse'], $data['NumLicence'], $id);
+        $stmt = $this->conn->prepare(
+            "UPDATE {$this->table} 
+             SET Nom=?, PostNom=?, Prenom=?, Telephone=?, Email=?, Adresse=? 
+             WHERE IdLaborantin=?"
+        );
+        $stmt->bind_param(
+            "ssssssi", 
+            $data['Nom'], 
+            $data['PostNom'], 
+            $data['Prenom'], 
+            $data['Telephone'], 
+            $data['Email'], 
+            $data['Adresse'], 
+            $id
+        );
         return $stmt->execute();
     }
 

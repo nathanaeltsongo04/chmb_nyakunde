@@ -25,6 +25,10 @@ $connectedMedecinId = $_SESSION['user_id'] ?? null; // Assurez-vous que c'est la
 if ($db) {
     $controller = new PrescrireExamenController($db);
 
+    // Récupère les listes des patients et des examens pour les datalists
+    $patients = $controller->getAllPatients();
+    $examens = $controller->getAllExamens();
+
     // Gère les requêtes HTTP POST pour l'ajout et la modification
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $method = $_POST['_method'] ?? 'POST';
@@ -148,24 +152,24 @@ ob_start();
                     <input type="hidden" name="IdMedecin" id="IdMedecin" value="<?= htmlspecialchars($connectedMedecinId) ?>">
 
                     <div class="mb-3">
-                        <label for="IdExamen" class="form-label">Examen</label>
-                        <select name="IdExamen" id="IdExamen" class="form-control" required>
-                            <!-- Options à remplir dynamiquement depuis la base de données -->
-                            <option value="">Sélectionner un examen...</option>
-                            <!-- Exemple statique : -->
-                            <option value="1">Examen A</option>
-                            <option value="2">Examen B</option>
-                        </select>
+                        <label for="IdExamenInput" class="form-label">Examen</label>
+                        <!-- Champ datalist pour les examens -->
+                        <input class="form-control" list="examenOptions" id="IdExamenInput" name="IdExamen" placeholder="Rechercher ou sélectionner un examen..." required>
+                        <datalist id="examenOptions">
+                            <?php foreach ($examens as $examen): ?>
+                                <option value="<?= htmlspecialchars($examen['NomExamen']) ?>" data-id="<?= htmlspecialchars($examen['IdExamen']) ?>">
+                            <?php endforeach; ?>
+                        </datalist>
                     </div>
                     <div class="mb-3">
-                        <label for="IdPatient" class="form-label">Patient</label>
-                        <select name="IdPatient" id="IdPatient" class="form-control" required>
-                            <!-- Options à remplir dynamiquement depuis la base de données -->
-                            <option value="">Sélectionner un patient...</option>
-                            <!-- Exemple statique : -->
-                            <option value="1">Patient X</option>
-                            <option value="2">Patient Y</option>
-                        </select>
+                        <label for="IdPatientInput" class="form-label">Patient</label>
+                        <!-- Champ datalist pour les patients -->
+                        <input class="form-control" list="patientOptions" id="IdPatientInput" name="IdPatient" placeholder="Rechercher ou sélectionner un patient..." required>
+                        <datalist id="patientOptions">
+                            <?php foreach ($patients as $patient): ?>
+                                <option value="<?= htmlspecialchars($patient['Nom']) ?>" data-id="<?= htmlspecialchars($patient['IdPatient']) ?>">
+                            <?php endforeach; ?>
+                        </datalist>
                     </div>
                     <div class="mb-3">
                         <label for="DatePrescription" class="form-label">Date de prescription</label>
@@ -193,9 +197,12 @@ ob_start();
     function openPrescrireExamenModal(p) {
         const isEdit = p !== null;
         document.getElementById('IdPrescrireExamen').value = isEdit ? p.IdPrescrireExamen : '';
-        // L'ID du médecin est maintenant un champ caché et sera géré côté serveur
-        document.getElementById('IdExamen').value = isEdit ? p.IdExamen : '';
-        document.getElementById('IdPatient').value = isEdit ? p.IdPatient : '';
+        // Pour les datalists, le champ de saisie prend la valeur de l'ID.
+        // Côté serveur, le NomExamen et le NomPatient ne sont pas des colonnes dans la table PrescrireExamen, mais les IdExamen et IdPatient le sont.
+        // Donc, nous pouvons définir la valeur de l'entrée sur les Id, car c'est ce qui est envoyé au serveur.
+        document.getElementById('IdExamenInput').value = isEdit ? p.NomExamen : '';
+        document.getElementById('IdPatientInput').value = isEdit ? p.NomPatient : '';
+        
         document.getElementById('DatePrescription').value = isEdit ? p.DatePrescription : '';
         document.getElementById('Commentaires').value = isEdit ? p.Commentaires : '';
 
@@ -205,7 +212,7 @@ ob_start();
 
         new bootstrap.Modal(document.getElementById('prescrireExamenModal')).show();
     }
-
+    
     // Fonction pour masquer automatiquement les alertes
     setTimeout(() => {
         document.querySelectorAll('.alert').forEach(alert => {
@@ -213,6 +220,34 @@ ob_start();
             setTimeout(() => alert.remove(), 500);
         });
     }, 2000);
+
+    // Fonction pour gérer la soumission du formulaire et envoyer les IDs
+    document.getElementById('prescrireExamenForm').addEventListener('submit', function(event) {
+        // Crée des champs cachés pour les IDs
+        const examenName = document.getElementById('IdExamenInput').value;
+        const patientName = document.getElementById('IdPatientInput').value;
+        
+        const examenId = document.querySelector(`#examenOptions option[value='${examenName}']`).dataset.id;
+        const patientId = document.querySelector(`#patientOptions option[value='${patientName}']`).dataset.id;
+
+        const examenInput = document.createElement('input');
+        examenInput.type = 'hidden';
+        examenInput.name = 'IdExamen';
+        examenInput.value = examenId;
+
+        const patientInput = document.createElement('input');
+        patientInput.type = 'hidden';
+        patientInput.name = 'IdPatient';
+        patientInput.value = patientId;
+
+        // Ajoute les champs au formulaire avant la soumission
+        this.appendChild(examenInput);
+        this.appendChild(patientInput);
+
+        // Retire les champs d'entrée originaux pour éviter d'envoyer les noms au lieu des IDs
+        document.getElementById('IdExamenInput').name = '';
+        document.getElementById('IdPatientInput').name = '';
+    });
 </script>
 
 <?php

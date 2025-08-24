@@ -1,64 +1,99 @@
 <?php
-
+/**
+ * Modèle pour la table 'Paiement'.
+ * Gère les opérations CRUD (Créer, Lire, Mettre à jour, Supprimer).
+ */
 class Paiement {
     private $conn;
-    private $table = "Paiements";
+    // Correction ici : le nom de la table est "Paiement", pas "Paiements"
+    private $table = "Paiement";
 
     public function __construct($db) {
         $this->conn = $db;
     }
+    
 
-    // Lire tous les paiements
+    /**
+     * Lit tous les paiements.
+     * @return array
+     */
     public function getAll() {
-        $result = $this->conn->query("SELECT * FROM {$this->table}");
-        return $result->fetch_all(MYSQLI_ASSOC);
+        $query = "SELECT * FROM " . $this->table;
+        $result = $this->conn->query($query);
+        if ($result) {
+            return $result->fetch_all(MYSQLI_ASSOC);
+        }
+        return [];
     }
 
-    // Lire un paiement par ID
+    /**
+     * Lit un paiement par son ID.
+     * @param int $id
+     * @return array|null
+     */
     public function getById($id) {
-        $stmt = $this->conn->prepare("SELECT * FROM {$this->table} WHERE IdPaiement = ?");
+        $query = "SELECT * FROM " . $this->table . " WHERE IdPaiement = ?";
+        $stmt = $this->conn->prepare($query);
         $stmt->bind_param("i", $id);
         $stmt->execute();
-        return $stmt->get_result()->fetch_assoc();
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
     }
 
-    // Créer un paiement
+    /**
+     * Crée un nouveau paiement.
+     * @param array $data
+     * @return bool
+     */
     public function create($data) {
-        $stmt = $this->conn->prepare("INSERT INTO {$this->table} 
-            (Montant, DatePaiement, ModePaiement, IdPatient, Description) 
-            VALUES (?, ?, ?, ?, ?)");
+        $query = "INSERT INTO " . $this->table . " 
+                  (Montant, DatePaiement, ModePaiement, IdPatient, Description) 
+                  VALUES (?, ?, ?, ?, ?)";
+        $stmt = $this->conn->prepare($query);
         $stmt->bind_param(
-            "disss", 
+            "dssis", 
             $data['Montant'], 
             $data['DatePaiement'], 
             $data['ModePaiement'], 
-            $data['IdPatient'], 
+            $data['IdPatient'],
             $data['Description']
         );
         return $stmt->execute();
     }
 
-    // Mettre à jour un paiement
+    /**
+     * Met à jour un paiement existant.
+     * @param int $id
+     * @param array $data
+     * @return bool
+     */
     public function update($id, $data) {
-        $stmt = $this->conn->prepare("UPDATE {$this->table} 
-            SET Montant=?, DatePaiement=?, ModePaiement=?, IdPatient=?, Description=? 
-            WHERE IdPaiement=?");
+        $query = "UPDATE " . $this->table . " 
+                  SET Montant=?, DatePaiement=?, ModePaiement=?, IdPatient=?, Description=? 
+                  WHERE IdPaiement=?";
+        $stmt = $this->conn->prepare($query);
         $stmt->bind_param(
-            "dsssi", 
+            "dssisi", 
             $data['Montant'], 
             $data['DatePaiement'], 
             $data['ModePaiement'], 
-            $data['IdPatient'], 
-            $data['Description'], 
+            $data['IdPatient'],
+            $data['Description'],
             $id
         );
         return $stmt->execute();
     }
 
-    // Supprimer un paiement
+    /**
+     * Supprime un paiement.
+     * @param int $id
+     * @return bool
+     */
     public function delete($id) {
-        $stmt = $this->conn->prepare("DELETE FROM {$this->table} WHERE IdPaiement=?");
+        $query = "DELETE FROM " . $this->table . " WHERE IdPaiement = ?";
+        $stmt = $this->conn->prepare($query);
         $stmt->bind_param("i", $id);
         return $stmt->execute();
     }
+    
 }

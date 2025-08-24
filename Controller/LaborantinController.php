@@ -1,13 +1,13 @@
 <?php
-require_once __DIR__ . '/../model/Laborantin.php';
-require_once __DIR__ . '/../config/Database.php';
+require_once __DIR__ . '/../Model/Laborantin.php';
 
 class LaborantinController {
     private $model;
 
     public function __construct() {
-        $db = new Database();
-        $this->model = new Laborantin($db->getConnection());
+        $database = new Database();
+        $db = $database->getConnection();
+        $this->model = new Laborantin($db);
     }
 
     public function index() {
@@ -24,9 +24,5 @@ class LaborantinController {
 
     public function destroy($id) {
         return $this->model->delete($id);
-    }
-
-    public function getById($id) {
-        return $this->model->getById($id);
     }
 }
