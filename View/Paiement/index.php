@@ -1,11 +1,5 @@
 <?php
-/**
- * Fichier index pour la gestion des paiements.
- * Ce script gère les requêtes d'ajout, de modification et de suppression.
- */
-
 session_start();
-// Les chemins peuvent varier en fonction de votre structure de projet
 require_once __DIR__ . '/../../config/Auth_check.php';
 require_once __DIR__ . '/../../config/Database.php';
 require_once __DIR__ . '/../../controller/PaiementController.php';
@@ -13,62 +7,50 @@ require_once __DIR__ . '/../../controller/PaiementController.php';
 $title = "Paiements";
 $pageTitle = "Gestion des Paiements";
 
-// Crée une instance de la classe Database
+// Connexion à la base de données (mysqli)
 $database = new Database();
-// Récupère la connexion de type mysqli
-$db = $database->getConnection();
+$db = $database->getConnection(); // doit retourner un objet mysqli
 
-// Crée une instance du contrôleur des paiements
-if ($db) {
-    $controller = new PaiementController($db);
+if (!$db) {
+    die("Erreur de connexion à la base de données.");
+}
 
-    // Récupère la liste des patients pour les datalists
-    // NOTE : Assurez-vous que votre PaiementController a bien une méthode getAllPatients()
-    $patients = $controller->getAllPatients();
+// Instancie le contrôleur avec mysqli
+$paiementController = new PaiementController($db);
 
-    // Gère les requêtes HTTP POST pour l'ajout et la modification
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $method = $_POST['_method'] ?? 'POST';
-        
-        // Si la méthode est PUT (modification)
-        if ($method === 'PUT') {
-            // Appelle la méthode update du contrôleur avec l'ID et les données
-            $controller->update($_POST['IdPaiement'], $_POST);
-            header("Location: index.php?msg=modif");
-            exit;
-        } else { // Si la méthode est POST (ajout)
-            // Appelle la méthode store du contrôleur avec les données
-            $controller->store($_POST);
-            header("Location: index.php?msg=ajout");
-            exit;
-        }
-    }
+// Récupère tous les paiements et tous les patients
+$paiements = $paiementController->getAllPaiements();
+$patients  = $paiementController->getAllPatients();
 
-    // Gère les requêtes HTTP GET pour la suppression
-    if (isset($_GET['delete'])) {
-        // Appelle la méthode delete du contrôleur avec l'ID
-        $controller->delete($_GET['delete']);
-        header("Location: index.php?msg=suppr");
+// Gestion POST pour ajout/modification
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $method = $_POST['_method'] ?? 'POST';
+    if ($method === 'PUT') {
+        $paiementController->update($_POST['IdPaiement'], $_POST);
+        header("Location: index.php?msg=modif");
+        exit;
+    } else {
+        $paiementController->store($_POST);
+        header("Location: index.php?msg=ajout");
         exit;
     }
+}
 
-    // Récupère tous les paiements pour l'affichage
-    $paiements = $controller->index();
-} else {
-    // Gère le cas où la connexion à la base de données a échoué
-    die("Erreur de connexion à la base de données.");
+// Gestion GET pour suppression
+if (isset($_GET['delete'])) {
+    $paiementController->delete($_GET['delete']);
+    header("Location: index.php?msg=suppr");
+    exit;
 }
 
 ob_start();
 ?>
 
-<!-- Contenu HTML de la page -->
 <div class="col-lg-12">
     <div class="row">
         <div class="col-12">
             <div class="card recent-sales overflow-auto">
                 <div class="filter">
-                    <!-- Bouton pour ouvrir le modal d'ajout -->
                     <a class="icon" data-bs-toggle="modal" data-bs-target="#paiementModal" onclick="openPaiementModal(null)">
                         <i class="bi bi-plus-circle-fill h4"></i>
                     </a>
@@ -108,11 +90,9 @@ ob_start();
                                         <td><?= htmlspecialchars($p['DatePaiement']) ?></td>
                                         <td><?= htmlspecialchars($p['ModePaiement']) ?></td>
                                         <td>
-                                            <!-- Bouton pour ouvrir le modal de modification -->
                                             <a class="text-info mx-1" href="#" onclick='openPaiementModal(<?= json_encode($p) ?>)'>
                                                 <span class="badge bg-success"><i class="bi bi-pencil-square fa-lg"></i></span>
                                             </a>
-                                            <!-- Bouton pour la suppression -->
                                             <a class="text-danger mx-1" href="?delete=<?= htmlspecialchars($p['IdPaiement']) ?>" onclick="return confirm('Voulez-vous vraiment supprimer ?')">
                                                 <span class="badge bg-danger"><i class="bi bi-trash fa-lg"></i></span>
                                             </a>
@@ -132,7 +112,7 @@ ob_start();
     </div>
 </div>
 
-<!-- Modal pour l'ajout et la modification -->
+<!-- Modal pour ajout/modification Paiement -->
 <div class="modal fade" id="paiementModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -147,7 +127,6 @@ ob_start();
 
                     <div class="mb-3">
                         <label for="IdPatientInput" class="form-label">Patient</label>
-                        <!-- Champ datalist pour les patients -->
                         <input class="form-control" list="patientOptions" id="IdPatientInput" name="IdPatientInput" placeholder="Rechercher ou sélectionner un patient..." required>
                         <datalist id="patientOptions">
                             <?php foreach ($patients as $patient): ?>
@@ -155,14 +134,17 @@ ob_start();
                             <?php endforeach; ?>
                         </datalist>
                     </div>
+
                     <div class="mb-3">
                         <label for="Montant" class="form-label">Montant</label>
                         <input type="number" step="0.01" name="Montant" id="Montant" class="form-control" placeholder="Montant du paiement" required min="0">
                     </div>
+
                     <div class="mb-3">
                         <label for="DatePaiement" class="form-label">Date de paiement</label>
                         <input type="date" name="DatePaiement" id="DatePaiement" class="form-control" required>
                     </div>
+
                     <div class="mb-3">
                         <label for="ModePaiement" class="form-label">Mode de Paiement</label>
                         <select name="ModePaiement" id="ModePaiement" class="form-control" required>
@@ -172,7 +154,7 @@ ob_start();
                             <option value="Mobile money">Mobile money</option>
                         </select>
                     </div>
-                    
+
                     <div class="text-center mt-3">
                         <button id="submitBtn" class="btn btn-secondary w-50 fw-bold" type="submit">Enregistrer</button>
                     </div>
@@ -183,51 +165,43 @@ ob_start();
 </div>
 
 <script>
-    /**
-     * Ouvre le modal de paiement et pré-remplit les champs si un paiement est fourni.
-     * @param {object|null} p Les données du paiement ou null pour un nouveau paiement.
-     */
-    function openPaiementModal(p) {
-        const isEdit = p !== null;
-        document.getElementById('IdPaiement').value = isEdit ? p.IdPaiement : '';
-        document.getElementById('IdPatientInput').value = isEdit ? p.NomPatient : '';
-        document.getElementById('Montant').value = isEdit ? p.Montant : '';
-        document.getElementById('DatePaiement').value = isEdit ? p.DatePaiement : '';
-        document.getElementById('ModePaiement').value = isEdit ? p.ModePaiement : 'Espèces';
+function openPaiementModal(p) {
+    const isEdit = p !== null;
+    document.getElementById('IdPaiement').value = isEdit ? p.IdPaiement : '';
+    document.getElementById('IdPatientInput').value = isEdit ? p.NomPatient : '';
+    document.getElementById('Montant').value = isEdit ? p.Montant : '';
+    document.getElementById('DatePaiement').value = isEdit ? p.DatePaiement : '';
+    document.getElementById('ModePaiement').value = isEdit ? p.ModePaiement : 'Espèces';
 
-        document.getElementById('_method').value = isEdit ? 'PUT' : 'POST';
-        document.getElementById('submitBtn').innerText = isEdit ? "Modifier" : "Enregistrer";
-        document.getElementById('modalTitle').innerText = isEdit ? "Modifier Paiement" : "Nouveau Paiement";
+    document.getElementById('_method').value = isEdit ? 'PUT' : 'POST';
+    document.getElementById('submitBtn').innerText = isEdit ? "Modifier" : "Enregistrer";
+    document.getElementById('modalTitle').innerText = isEdit ? "Modifier Paiement" : "Nouveau Paiement";
 
-        new bootstrap.Modal(document.getElementById('paiementModal')).show();
-    }
-    
-    // Fonction pour masquer automatiquement les alertes
-    setTimeout(() => {
-        document.querySelectorAll('.alert').forEach(alert => {
-            alert.classList.add('fade', 'show');
-            setTimeout(() => alert.remove(), 500);
-        });
-    }, 2000);
+    new bootstrap.Modal(document.getElementById('paiementModal')).show();
+}
 
-    // Fonction pour gérer la soumission du formulaire et envoyer les IDs
-    document.getElementById('paiementForm').addEventListener('submit', function(event) {
-        // Crée un champ caché pour l'ID du patient
-        const patientName = document.getElementById('IdPatientInput').value;
-        
-        const patientOption = document.querySelector(`#patientOptions option[value='${patientName}']`);
-        if (patientOption) {
-            const patientId = patientOption.dataset.id;
-            const patientInput = document.createElement('input');
-            patientInput.type = 'hidden';
-            patientInput.name = 'IdPatient';
-            patientInput.value = patientId;
-            this.appendChild(patientInput);
-        }
-
-        // Retire le champ d'entrée original pour éviter d'envoyer le nom au lieu de l'ID
-        document.getElementById('IdPatientInput').name = '';
+// Masquer automatiquement les alertes
+setTimeout(() => {
+    document.querySelectorAll('.alert').forEach(alert => {
+        alert.classList.add('fade', 'show');
+        setTimeout(() => alert.remove(), 500);
     });
+}, 2000);
+
+// Remplacer le nom du patient par l'ID avant envoi
+document.getElementById('paiementForm').addEventListener('submit', function(event) {
+    const patientName = document.getElementById('IdPatientInput').value;
+    const patientOption = document.querySelector(`#patientOptions option[value='${patientName}']`);
+    if (patientOption) {
+        const patientId = patientOption.dataset.id;
+        const patientInput = document.createElement('input');
+        patientInput.type = 'hidden';
+        patientInput.name = 'IdPatient';
+        patientInput.value = patientId;
+        this.appendChild(patientInput);
+    }
+    document.getElementById('IdPatientInput').name = '';
+});
 </script>
 
 <?php

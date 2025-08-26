@@ -1,6 +1,5 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../config/Auth_check.php';
 require_once __DIR__ . '/../../config/Database.php';
 require_once __DIR__ . '/../../controller/RendezVousController.php';
 require_once __DIR__ . '/../../controller/PatientController.php';
@@ -9,28 +8,28 @@ require_once __DIR__ . '/../../controller/MedecinController.php';
 $title = "Rendez-vous";
 $pageTitle = "Rendez-vous";
 
-// Connexion DB
+// Connexion à la base
 $database = new Database();
-$db = $database->getConnection();
+$conn = $database->getConnection(); // mysqli
 
-// Controllers
-$rendezVousController = new RendezVousController($db);
-$patientController = new PatientController($db);
-$medecinController = new MedecinController($db);
+// Vérification si utilisateur connecté
+if (!isset($_SESSION['user_id'])) {
+    die("Utilisateur non connecté. Veuillez vous connecter.");
+}
+
+// Instanciation des contrôleurs avec mysqli
+$rendezVousController = new RendezVousController($conn);
+$patientController = new PatientController($conn);
+$medecinController = new MedecinController($conn);
 
 // Liste des patients
 $patients = $patientController->index();
 
-// Médecin connecté (depuis la session)
-$medecinConnecte = $_SESSION['medecin'] ?? null;
-if (!$medecinConnecte) {
-    die("Médecin non connecté");
-}
-
 // Ajout ou modification
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $method = $_POST['_method'] ?? 'POST';
-    $_POST['IdMedecin'] = $medecinConnecte['IdMedecin']; // forcer le médecin connecté
+    $_POST['IdMedecin'] = $_SESSION['user_id']; // ID du médecin connecté
+
     if ($method === 'PUT') {
         $rendezVousController->update($_POST['IdRendezVous'], $_POST);
         header("Location: index.php?msg=modif");
@@ -56,75 +55,66 @@ ob_start();
 ?>
 
 <div class="col-lg-12">
-    <div class="row">
-        <div class="col-12">
-            <div class="card recent-sales overflow-auto">
-                <div class="filter">
-                    <a class="icon" data-bs-toggle="modal" data-bs-target="#rendezVousModal" onclick="openRendezVousModal(null)">
-                        <i class="bi bi-plus-circle-fill h4"></i>
-                    </a>
-                </div>
-
-                <div class="card-body">
-                    <h5 class="card-title"><?= $pageTitle ?></h5>
-
-                    <?php if (isset($_GET['msg'])): ?>
-                        <?php if ($_GET['msg'] === 'ajout'): ?>
-                            <div class="alert alert-success">Rendez-vous ajouté ✅</div>
-                        <?php elseif ($_GET['msg'] === 'modif'): ?>
-                            <div class="alert alert-info">Rendez-vous modifié ✏️</div>
-                        <?php elseif ($_GET['msg'] === 'suppr'): ?>
-                            <div class="alert alert-danger">Rendez-vous supprimé 🗑️</div>
-                        <?php endif; ?>
-                    <?php endif; ?>
-
-                    <table class="table datatable text-center">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Date & Heure</th>
-                                <th>Patient</th>
-                                <th>Médecin</th>
-                                <th>Objet</th>
-                                <th>Statut</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($rendezvous as $rv): ?>
-                                <tr>
-                                    <td><?= $rv['IdRendezVous'] ?></td>
-                                    <td><?= htmlspecialchars($rv['DateHeure']) ?></td>
-                                    <td>
-                                        <?php 
-                                        $patient = array_filter($patients, fn($p) => $p['IdPatient'] == $rv['IdPatient']);
-                                        $patient = array_shift($patient);
-                                        echo $patient ? htmlspecialchars($patient['Nom'].' '.$patient['PostNom'].' '.$patient['Prenom']) : '';
-                                        ?>
-                                    </td>
-                                    <td><?= htmlspecialchars($medecinConnecte['Nom'].' '.$medecinConnecte['PostNom'].' '.$medecinConnecte['Prenom']) ?></td>
-                                    <td><?= htmlspecialchars($rv['Objet']) ?></td>
-                                    <td><?= htmlspecialchars($rv['Statut']) ?></td>
-                                    <td>
-                                        <a class="text-info mx-1" href="#" onclick='openRendezVousModal(<?= json_encode($rv) ?>)'>
-                                            <span class="badge bg-success"><i class="bi bi-pencil-square fa-lg"></i></span>
-                                        </a>
-                                        <a class="text-danger mx-1" href="?delete=<?= $rv['IdRendezVous'] ?>" onclick="return confirm('Voulez-vous vraiment supprimer ?')">
-                                            <span class="badge bg-danger"><i class="bi bi-trash fa-lg"></i></span>
-                                        </a>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-
-                </div>
-            </div>
+    <div class="card recent-sales overflow-auto">
+        <div class="card-body d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title"><?= $pageTitle ?></h5>
+            <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#rendezVousModal" onclick="openRendezVousModal(null)">
+                <i class="bi bi-plus-circle-fill me-2"></i>Nouveau Rendez-vous
+            </button>
         </div>
+
+        <?php if (isset($_GET['msg'])): ?>
+            <div class="alert alert-<?= $_GET['msg'] === 'ajout' ? 'success' : ($_GET['msg'] === 'modif' ? 'info' : 'danger') ?>">
+                <?= $_GET['msg'] === 'ajout' ? 'Rendez-vous ajouté ✅' : ($_GET['msg'] === 'modif' ? 'Rendez-vous modifié ✏️' : 'Rendez-vous supprimé 🗑️') ?>
+            </div>
+        <?php endif; ?>
+
+        <div class="table-responsive mt-3">
+            <table class="table datatable text-center">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Date & Heure</th>
+                        <th>Patient</th>
+                        <th>Médecin</th>
+                        <th>Objet</th>
+                        <th>Statut</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($rendezvous as $rv): ?>
+                        <tr>
+                            <td><?= $rv['IdRendezVous'] ?></td>
+                            <td><?= htmlspecialchars($rv['DateHeure']) ?></td>
+                            <td>
+                                <?php
+                                $patient = array_filter($patients, fn($p) => $p['IdPatient'] == $rv['IdPatient']);
+                                $patient = array_shift($patient);
+                                echo $patient ? htmlspecialchars($patient['Nom'].' '.$patient['PostNom'].' '.$patient['Prenom']) : '';
+                                ?>
+                            </td>
+                            <td><?= htmlspecialchars($_SESSION['nom_complet']) ?></td>
+                            <td><?= htmlspecialchars($rv['Objet']) ?></td>
+                            <td><?= htmlspecialchars($rv['Statut']) ?></td>
+                            <td>
+                                <a class="text-info mx-1" href="#" onclick='openRendezVousModal(<?= json_encode($rv) ?>)'>
+                                    <span class="badge bg-success"><i class="bi bi-pencil-square fa-lg"></i></span>
+                                </a>
+                                <a class="text-danger mx-1" href="?delete=<?= $rv['IdRendezVous'] ?>" onclick="return confirm('Voulez-vous vraiment supprimer ?')">
+                                    <span class="badge bg-danger"><i class="bi bi-trash fa-lg"></i></span>
+                                </a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+
     </div>
 </div>
 
-<!-- Modal RendezVous -->
+<!-- Modal CRUD -->
 <div class="modal fade" id="rendezVousModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -136,12 +126,12 @@ ob_start();
                 <form id="rendezVousForm" method="POST">
                     <input type="hidden" name="IdRendezVous" id="IdRendezVous">
                     <input type="hidden" name="_method" id="_method" value="POST">
+                    <input type="hidden" name="IdMedecin" value="<?= $_SESSION['user_id'] ?>">
 
                     <div class="mb-3">
                         <input type="datetime-local" name="DateHeure" id="DateHeure" class="form-control" required>
                     </div>
 
-                    <!-- Patient avec datalist -->
                     <div class="mb-3">
                         <input list="patientsList" name="IdPatient" id="IdPatient" class="form-control" placeholder="Sélectionner un patient" required>
                         <datalist id="patientsList">
@@ -149,11 +139,6 @@ ob_start();
                                 <option value="<?= $p['IdPatient'] ?>"><?= htmlspecialchars($p['Nom'].' '.$p['PostNom'].' '.$p['Prenom']) ?></option>
                             <?php endforeach; ?>
                         </datalist>
-                    </div>
-
-                    <!-- Médecin connecté (readonly) -->
-                    <div class="mb-3">
-                        <input type="text" class="form-control" value="<?= htmlspecialchars($medecinConnecte['Nom'].' '.$medecinConnecte['PostNom'].' '.$medecinConnecte['Prenom']) ?>" readonly>
                     </div>
 
                     <div class="mb-3">
@@ -197,10 +182,12 @@ function openRendezVousModal(rv) {
 setTimeout(() => {
     document.querySelectorAll('.alert').forEach(alert => {
         alert.classList.add('fade', 'show');
-        setTimeout(() => alert.remove(), 500);
+        setTimeout(() => alert.remove(), 5000);
     });
 }, 2000);
 </script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
 <?php
 $content = ob_get_clean();

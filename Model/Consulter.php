@@ -176,4 +176,6 @@ class Consulter {
         }
         return $patients;
     }
+
+    
 }
