@@ -31,7 +31,7 @@ class Consulter {
                     c.SignesVitaux,
                     c.Diagnostic,
                     m.Nom AS NomMedecin,
-                    p.Nom AS NomPatient
+                    p.Nom AS NomPatient, p.PostNom as PostNomPatient, p.Prenom as PrenomPatient
                   FROM Consulter c
                   JOIN Medecin m ON c.IdMedecin = m.IdMedecin
                   JOIN Patient p ON c.IdPatient = p.IdPatient";
@@ -165,7 +165,7 @@ class Consulter {
      * @return array Un tableau de patients.
      */
     public function getAllPatients(): array {
-        $query = "SELECT IdPatient, Nom FROM Patient";
+        $query = "SELECT IdPatient, Nom , PostNom, Prenom FROM Patient";
         $result = $this->db->query($query);
         $patients = [];
         if ($result) {

@@ -33,7 +33,7 @@ class Hospitaliser
     public function index()
     {
         // Correction de la colonne 'NomChambre' par 'Numero'
-        $query = "SELECT h.IdHospitaliser, pa.Nom AS NomPatient, c.Numero AS NomChambre, h.DateEntree, h.DateSortie, h.MotifHospitalisation
+        $query = "SELECT h.IdHospitaliser, pa.Nom AS NomPatient, pa.PostNom AS PostNomPatient, pa.Prenom AS PrenomPatient, c.Numero AS NomChambre, h.DateEntree, h.DateSortie, h.MotifHospitalisation
                   FROM " . $this->table_name . " h
                   JOIN Patient pa ON h.IdPatient = pa.IdPatient
                   JOIN Chambre c ON h.IdChambre = c.IdChambre
@@ -102,7 +102,7 @@ class Hospitaliser
      */
     public function getAllPatients()
     {
-        $query = "SELECT IdPatient, Nom FROM Patient";
+        $query = "SELECT IdPatient, Nom, PostNom, Prenom FROM Patient";
         return $this->conn->query($query);
     }
 }

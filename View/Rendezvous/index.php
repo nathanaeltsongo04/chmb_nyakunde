@@ -8,47 +8,43 @@ require_once __DIR__ . '/../../controller/MedecinController.php';
 $title = "Rendez-vous";
 $pageTitle = "Rendez-vous";
 
-// Connexion à la base
 $database = new Database();
-$conn = $database->getConnection(); // mysqli
+$conn = $database->getConnection();
 
-// Vérification si utilisateur connecté
 if (!isset($_SESSION['user_id'])) {
     die("Utilisateur non connecté. Veuillez vous connecter.");
 }
 
-// Instanciation des contrôleurs avec mysqli
 $rendezVousController = new RendezVousController($conn);
 $patientController = new PatientController($conn);
 $medecinController = new MedecinController($conn);
 
-// Liste des patients
 $patients = $patientController->index();
 
-// Ajout ou modification
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $method = $_POST['_method'] ?? 'POST';
-    $_POST['IdMedecin'] = $_SESSION['user_id']; // ID du médecin connecté
+    $_POST['IdMedecin'] = $_SESSION['user_id'];
 
     if ($method === 'PUT') {
         $rendezVousController->update($_POST['IdRendezVous'], $_POST);
         header("Location: index.php?msg=modif");
         exit;
     } else {
+        if(empty($_POST['IdPatient'])) {
+            die("Erreur : Veuillez sélectionner un patient dans la liste.");
+        }
         $rendezVousController->store($_POST);
         header("Location: index.php?msg=ajout");
         exit;
     }
 }
 
-// Suppression
 if (isset($_GET['delete'])) {
     $rendezVousController->destroy($_GET['delete']);
     header("Location: index.php?msg=suppr");
     exit;
 }
 
-// Liste des rendez-vous
 $rendezvous = $rendezVousController->index();
 
 ob_start();
@@ -114,13 +110,12 @@ ob_start();
     </div>
 </div>
 
-<!-- Modal CRUD -->
 <div class="modal fade" id="rendezVousModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-bottom-0">
                 <h5 class="modal-title fw-bold" id="modalTitle">Nouveau Rendez-vous</h5>
-                <button type="button" class="btn-close h2 fw-bold" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="rendezVousForm" method="POST">
@@ -133,10 +128,11 @@ ob_start();
                     </div>
 
                     <div class="mb-3">
-                        <input list="patientsList" name="IdPatient" id="IdPatient" class="form-control" placeholder="Sélectionner un patient" required>
+                        <input list="patientsList" id="IdPatientInput" class="form-control" placeholder="Sélectionner un patient" required>
+                        <input type="hidden" name="IdPatient" id="IdPatient">
                         <datalist id="patientsList">
                             <?php foreach ($patients as $p): ?>
-                                <option value="<?= $p['IdPatient'] ?>"><?= htmlspecialchars($p['Nom'].' '.$p['PostNom'].' '.$p['Prenom']) ?></option>
+                                <option value="<?= htmlspecialchars($p['Nom'].' '.$p['PostNom'].' '.$p['Prenom']) ?>" data-id="<?= $p['IdPatient'] ?>"></option>
                             <?php endforeach; ?>
                         </datalist>
                     </div>
@@ -167,18 +163,31 @@ function openRendezVousModal(rv) {
     const isEdit = rv !== null;
     document.getElementById('IdRendezVous').value = isEdit ? rv.IdRendezVous : '';
     document.getElementById('DateHeure').value = isEdit ? rv.DateHeure.replace(' ', 'T') : '';
-    document.getElementById('IdPatient').value = isEdit ? rv.IdPatient : '';
+    const patientName = isEdit ? rv.NomPatient + ' ' + rv.PostNom + ' ' + rv.Prenom : '';
+    document.getElementById('IdPatientInput').value = patientName;
     document.getElementById('Objet').value = isEdit ? rv.Objet : '';
     document.getElementById('Statut').value = isEdit ? rv.Statut : 'en_attente';
-
     document.getElementById('_method').value = isEdit ? 'PUT' : 'POST';
     document.getElementById('submitBtn').innerText = isEdit ? "Modifier" : "Enregistrer";
     document.getElementById('modalTitle').innerText = isEdit ? "Modifier Rendez-vous" : "Nouveau Rendez-vous";
-
     new bootstrap.Modal(document.getElementById('rendezVousModal')).show();
 }
 
-// Alert auto-dismiss
+const patientInput = document.getElementById('IdPatientInput');
+const patientIdInput = document.getElementById('IdPatient');
+patientInput.addEventListener('input', function() {
+    const option = Array.from(document.querySelectorAll('#patientsList option')).find(opt => opt.value === patientInput.value);
+    patientIdInput.value = option ? option.dataset.id : '';
+});
+
+document.getElementById('rendezVousForm').addEventListener('submit', function(e) {
+    if(patientIdInput.value === '') {
+        e.preventDefault();
+        alert('Veuillez sélectionner un patient dans la liste.');
+        patientInput.focus();
+    }
+});
+
 setTimeout(() => {
     document.querySelectorAll('.alert').forEach(alert => {
         alert.classList.add('fade', 'show');

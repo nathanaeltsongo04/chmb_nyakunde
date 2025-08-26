@@ -61,7 +61,7 @@ ob_start();
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Nom</th>
+                                <th>Désignation</th>
                                 <th>Description</th>
                                 <th>Dosage</th>
                                 <th>Effets Secondaires</th>
@@ -111,7 +111,7 @@ ob_start();
                     <input type="hidden" name="_method" id="_method" value="POST">
 
                     <div class="mb-3">
-                        <input type="text" name="NomMedicament" id="NomMedicament" class="form-control" placeholder="Nom" required>
+                        <input type="text" name="NomMedicament" id="NomMedicament" class="form-control" placeholder="Désignation" required>
                     </div>
                     <div class="mb-3">
                         <textarea name="Description" id="Description" class="form-control" placeholder="Description"></textarea>

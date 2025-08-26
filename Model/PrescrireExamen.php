@@ -30,9 +30,9 @@ class PrescrireExamen {
                     p.IdPatient,
                     p.DatePrescription,
                     p.Commentaires,
-                    m.Nom AS NomMedecin,
+                    m.Nom AS NomMedecin, m.PostNom as PostNomMedecin, m.Prenom as PrenomMedecin,
                     e.NomExamen,
-                    pat.Nom AS NomPatient
+                    pat.Nom AS NomPatient ,pat.PostNom as PostNomPatient, pat.Prenom as PrenomPatient
                   FROM PrescrireExamen p
                   JOIN Medecin m ON p.IdMedecin = m.IdMedecin
                   JOIN Examen e ON p.IdExamen = e.IdExamen
@@ -149,7 +149,7 @@ class PrescrireExamen {
      * @return array Un tableau de patients.
      */
     public function getAllPatients(): array {
-        $query = "SELECT IdPatient, Nom FROM Patient";
+        $query = "SELECT IdPatient, Nom , PostNom, Prenom FROM Patient";
         $result = $this->db->query($query);
         $patients = [];
         if ($result) {
